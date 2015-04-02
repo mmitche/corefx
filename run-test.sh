@@ -60,6 +60,7 @@ TestHostVersion="0.0.1-prerelease"
 OverlayDir="$ProjectRoot/bin/tests/$OS.AnyCPU.$Configuration/TestOverlay/"
 TestSelection=".*"
 TestsFailed=0
+TestAssemblyList=""
 
 create_test_overlay()
 {
@@ -131,9 +132,7 @@ copy_test_overlay()
   cp -r $OverlayDir/* $testDir/
 }
 
-
-# $1 is the name of the test project
-runtest()
+prepare_test()
 {
   testProject=$1
 
@@ -151,13 +150,12 @@ runtest()
     echo "Skipping $testProject"
     return
   fi
-
+  
   # Grab the directory name that would correspond to this test
 
   fileName="${file##*/}"
   fileNameWithoutExtension="${fileName%.*}"
   testDllName="$fileNameWithoutExtension.dll"
-  xunitOSCategory="non$LowerOStests"
 
   dirName="$CoreFxTestsRoot/tests/Windows_NT.AnyCPU.$Configuration/$fileNameWithoutExtension/aspnetcore50"
 
@@ -167,16 +165,26 @@ runtest()
     return
   fi
 
+  # Copy the overlay
+  
   copy_test_overlay $dirName
+  
+  TestAssemblyList="$TestAssemblyList $dirName/$testDllName"
+}
 
-  # Invoke xunit
+# $1 is the name of the test project
+runtests()
+{
+  local xunitOSCategory="non$LowerOStests"
 
-  pushd $dirName > /dev/null
+  # Invoke xunit from the overlay dir
+
+  pushd $OverlayDir > /dev/null
   echo
   echo "Running tests in $dirName"
-  echo "./corerun xunit.console.netcore.exe $testDllName -xml testResults.xml -notrait category=failing -notrait category=OuterLoop -notrait category=$xunitOSCategory"
+  echo "./corerun xunit.console.netcore.exe $TestAssemblyList -xml testResults.xml -notrait category=failing -notrait category=OuterLoop -notrait category=$xunitOSCategory"
   echo
-  ./corerun xunit.console.netcore.exe $testDllName -xml testResults.xml -notrait category=failing -notrait category=OuterLoop -notrait category=$xunitOSCategory
+  ./corerun xunit.console.netcore.exe $TestAssemblyList -xml testResults.xml -notrait category=failing -notrait category=OuterLoop -notrait category=$xunitOSCategory
   if [ $? ]
   then
     TestsFailed=1
@@ -240,7 +248,9 @@ create_test_overlay
 
 for file in src/**/tests/*.Tests.csproj
 do
-  runtest $file
+  prepare_test $file
 done
+
+runtests
 
 exit $TestsFailed
