@@ -239,9 +239,16 @@ create_test_overlay
 
 # Walk the directory tree rooted at src bin/tests/Windows_NT.AnyCPU.$Configuration/
 
+numberOfProcesses=0
+maxProcesses=$(($(getconf _NPROCESSORS_ONLN)*2))
 for file in src/**/tests/*.Tests.csproj
 do
-  runtest $file
+  runtest $file &
+  numberOfProcesses=$(($numberOfProcesses+1))
+  if [ "$numberOfProcesses" -ge $maxProcesses ]; then
+    wait
+    numberOfProcesses=0
+  fi
 done
 
 exit $TestsFailed
