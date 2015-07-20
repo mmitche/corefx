@@ -1,6 +1,15 @@
 @echo off
 setlocal
 
+set _buildproj=%~dp0build.proj
+set _buildlog=%~dp0msbuild.log
+
+:Arg_Loop
+if "%1" == "" goto ArgsDone
+if /i "%1" == "/?" goto Usage
+shift
+:ArgsDone
+
 :: Note: We've disabled node reuse because it causes file locking issues.
 ::       The issue is that we extend the build with our own targets which
 ::       means that that rebuilding cannot successfully delete the task
@@ -22,11 +31,7 @@ if not defined VisualStudioVersion (
     exit /b 1
 )
 
-:EnvSet
-
 :: Log build command line
-set _buildproj=%~dp0build.proj
-set _buildlog=%~dp0msbuild.log
 set _buildprefix=echo
 set _buildpostfix=^> "%_buildlog%"
 call :build %*
@@ -51,3 +56,14 @@ findstr /ir /c:".*Warning(s)" /c:".*Error(s)" /c:"Time Elapsed.*" "%_buildlog%"
 echo Build Exit Code = %BUILDERRORLEVEL%
 
 exit /b %BUILDERRORLEVEL%
+
+:usage
+
+echo build.cmd [msbuild options]
+echo.
+echo Any additional parameters passed to build.cmd will be passed along to msbuild.
+echo Some typical options are:
+echo     /p:SkipTests=true - Skips execution of tests
+echo     /p:Coverage=true - Run code coverage
+
+exit /b 1
