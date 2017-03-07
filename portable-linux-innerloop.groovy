@@ -1,4 +1,4 @@
-node('ubuntu1604-20160803') {
+node('ubuntu1604-20170307') {
     checkout scm
     sh 'ls'
 }
