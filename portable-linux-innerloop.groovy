@@ -3,7 +3,7 @@
 //     ...
 // }
 // ... is wrapped by a try/finally that defines workspace cleanup
-node('ubuntu1604-20170307') {
+node('ubuntu1604-20170216') {
     try {
         checkout scm // Check out source control (based on parent scm settings)
         // Initialize tools
