@@ -1,4 +1,9 @@
 node('ubuntu1604-20170307') {
-    checkout scm
-    sh 'ls'
+    try {
+        checkout scm
+        sh 'ls'
+    }
+    finally {
+        step([$class: 'WsCleanup'])        
+    }
 }
