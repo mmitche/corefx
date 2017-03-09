@@ -34,6 +34,8 @@ node('ubuntu1604-20170216') {
             sh "docker run -d -v ${hostWorkspaceDir}:${dockerWorkspaceDir} --name ${dockerContainerName} ${dockerImageName} sleep 7200"
         }
         stage ("Build corefx") {
+            // Initialize the tools
+            sh "docker exec ${dockerContainerName} ${dockerWorkspaceDir}/init-tools.sh"
             // Generate the version assets
             sh "docker exec ${dockerContainerName} ${dockerWorkspaceDir}/build-managed.sh -OfficialBuildId=${ghprbActualCommit} -- /t:GenerateVersionSourceFile /p:GenerateVersionSourceFile=true"
             // Sync
