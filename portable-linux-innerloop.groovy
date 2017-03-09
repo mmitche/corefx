@@ -35,8 +35,13 @@ node('ubuntu1604-20170216') {
     }
     finally {
         stage ("Clean-up docker") {
-            sh "docker stop ${dockerContainerName}"
-            sh "docker rm ${dockerContainerName}"
+            try {
+                sh "docker stop ${dockerContainerName}"
+                sh "docker rm ${dockerContainerName}"
+            }
+            catch {
+                // Do nothing.
+            }
         }
         stage ("Clean-up workspace") {
             step([$class: 'WsCleanup'])
