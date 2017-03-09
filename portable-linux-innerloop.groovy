@@ -17,7 +17,7 @@ node('ubuntu1604-20170216') {
     try {
         docker.image(dockerImageName).inside {
             // Workaround HOME being set to / by default in the docker.image (screws with NuGet) 
-            withEnv(['HOME=') {
+            withEnv(['HOME=']) {
                 stage ('Checkout source') {
                     checkout scm
                 }
