@@ -15,9 +15,9 @@ def helixApiEndpoint = 'https://helix.dot.net/api/2016-06-28/jobs'
 
 node('ubuntu1604-20170216') {
     try {
-        docker.image(dockerImageName).inside {
-            // Workaround HOME being set to / by default in the docker.image (screws with NuGet) 
-            withEnv(['HOME=']) {
+        // Workaround HOME being set to / by default in the docker.image (screws with NuGet) 
+        withEnv(['HOME=']) {
+            docker.image(dockerImageName).inside {
                 stage ('Checkout source') {
                     checkout scm
                 }
@@ -27,7 +27,7 @@ node('ubuntu1604-20170216') {
                 }
                 stage ('Generate version assets') {
                     // Generate the version assets
-                    sh "./build-managed.sh -OfficialBuildId=${ghprbActualCommit} -- /t:GenerateVersionSourceFile /p:GenerateVersionSourceFile=true"
+                    sh "./build-managed.sh -- /t:GenerateVersionSourceFile /p:GenerateVersionSourceFile=true"
                 }
             }
         }
