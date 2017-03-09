@@ -49,9 +49,9 @@ node('ubuntu1604-20170216') {
             // Build product
             sh "docker exec ${dockerContainerName} cd ${dockerWorkspaceDir};./build.sh -buildArch=x64 -${configuration} -portableLinux"
             // Build tests 
-            sh "docker exec ${dockerContainerName} cd ${dockerWorkspaceDir};./build-tests.sh -buildArch=x64 -${configuration} -SkipTests -- /p:ArchiveTests=true /p:EnableDumpling=true"
+            sh "docker exec ${dockerContainerName} cd ${dockerWorkspaceDir};./build-tests.sh -buildArch=x64 -${configuration}"" -SkipTests -- /p:ArchiveTests=true /p:EnableDumpling=true"
             // Submit to Helix.
-            sh "docker exec ${dockerContainerName} cd ${dockerWorkspaceDir};./Tools/msbuild.sh src/tests.builds /t:CloudBuild /p:ArchGroup=x64 /p:ConfigurationGroup=${configuration} /p:EnableCloudTest=true /p:TestProduct=corefx /p:TimeoutInSeconds=1200 /p:TargetOS=Linux /p:BuildMoniker=none /p:CloudDropAccountName=dotnetbuilddrops /p:CloudResultsAccountName=dotnetjobresults /p:CloudDropAccessToken=$(CloudDropAccessToken) /p:CloudResultsAccessToken=$(OutputCloudResultsAccessToken) /p:HelixApiAccessKey=$(HelixApiAccessKey) /p:HelixApiEndpoint=${helixApiEndpoint} /p:Branch=${GIT_BRANCH} /p:TargetQueue=${targetHelixQueues} /p:OfficialBuildId=${ghprbActualCommit}"
+            /*sh "docker exec ${dockerContainerName} cd ${dockerWorkspaceDir};./Tools/msbuild.sh src/tests.builds /t:CloudBuild /p:ArchGroup=x64 /p:ConfigurationGroup=${configuration} /p:EnableCloudTest=true /p:TestProduct=corefx /p:TimeoutInSeconds=1200 /p:TargetOS=Linux /p:BuildMoniker=none /p:CloudDropAccountName=dotnetbuilddrops /p:CloudResultsAccountName=dotnetjobresults /p:CloudDropAccessToken=$(CloudDropAccessToken) /p:CloudResultsAccessToken=$(OutputCloudResultsAccessToken) /p:HelixApiAccessKey=$(HelixApiAccessKey) /p:HelixApiEndpoint=${helixApiEndpoint} /p:Branch=${GIT_BRANCH} /p:TargetQueue=${targetHelixQueues} /p:OfficialBuildId=${ghprbActualCommit}"*/
             // Publish packages
         }
     }
