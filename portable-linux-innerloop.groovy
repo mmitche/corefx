@@ -14,14 +14,22 @@ def targetHelixQueues = 'Redhat.72.Amd64'
 def helixApiEndpoint = 'https://helix.dot.net/api/2016-06-28/jobs'
 
 node('ubuntu1604-20170216') {
-    def hostWorkspaceDir = pwd()
     try {
         docker.image(dockerImageName).inside {
-            checkout scm
-            sh './init-tools.sh'
+            stage ('Checkout source') {
+                checkout scm
+            }
+            stage ('Initialzie tools') {
+                // Init tools
+                sh './init-tools.sh'
+            }
+            stage ('Generate version assets') {
+                // Generate the version assets
+                sh "./build-managed.sh -OfficialBuildId=${ghprbActualCommit} -- /t:GenerateVersionSourceFile /p:GenerateVersionSourceFile=true"
+            }
         }
 
-        stage ('Checkout Source') {
+        /*stage ('Checkout Source') {
             checkout scm // Check out source control (based on parent scm settings)
         }
         stage ("Initialize tools and docker") {
@@ -52,9 +60,9 @@ node('ubuntu1604-20170216') {
             // Build tests 
             sh "docker exec ${dockerContainerName} cd ${dockerWorkspaceDir};./build-tests.sh -buildArch=x64 -${configuration}"" -SkipTests -- /p:ArchiveTests=true /p:EnableDumpling=true"
             // Submit to Helix.
-            /*sh "docker exec ${dockerContainerName} cd ${dockerWorkspaceDir};./Tools/msbuild.sh src/tests.builds /t:CloudBuild /p:ArchGroup=x64 /p:ConfigurationGroup=${configuration} /p:EnableCloudTest=true /p:TestProduct=corefx /p:TimeoutInSeconds=1200 /p:TargetOS=Linux /p:BuildMoniker=none /p:CloudDropAccountName=dotnetbuilddrops /p:CloudResultsAccountName=dotnetjobresults /p:CloudDropAccessToken=$(CloudDropAccessToken) /p:CloudResultsAccessToken=$(OutputCloudResultsAccessToken) /p:HelixApiAccessKey=$(HelixApiAccessKey) /p:HelixApiEndpoint=${helixApiEndpoint} /p:Branch=${GIT_BRANCH} /p:TargetQueue=${targetHelixQueues} /p:OfficialBuildId=${ghprbActualCommit}"*/
+            /*sh "docker exec ${dockerContainerName} cd ${dockerWorkspaceDir};./Tools/msbuild.sh src/tests.builds /t:CloudBuild /p:ArchGroup=x64 /p:ConfigurationGroup=${configuration} /p:EnableCloudTest=true /p:TestProduct=corefx /p:TimeoutInSeconds=1200 /p:TargetOS=Linux /p:BuildMoniker=none /p:CloudDropAccountName=dotnetbuilddrops /p:CloudResultsAccountName=dotnetjobresults /p:CloudDropAccessToken=$(CloudDropAccessToken) /p:CloudResultsAccessToken=$(OutputCloudResultsAccessToken) /p:HelixApiAccessKey=$(HelixApiAccessKey) /p:HelixApiEndpoint=${helixApiEndpoint} /p:Branch=${GIT_BRANCH} /p:TargetQueue=${targetHelixQueues} /p:OfficialBuildId=${ghprbActualCommit}"
             // Publish packages
-        }
+        }*/
     }
     finally {
         stage ("Clean-up Docker") {
