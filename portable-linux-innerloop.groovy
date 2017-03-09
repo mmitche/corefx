@@ -33,17 +33,18 @@ node('ubuntu1604-20170216') {
             // Start docker, expose the workspace directory to the docker container
             sh "docker run -d -v ${hostWorkspaceDir}:${dockerWorkspaceDir} --name ${dockerContainerName} ${dockerImageName} sleep 7200"
         }
+        // ISSUE-Today we can't 
         stage ("Build corefx") {
             // Initialize the tools
-            sh "docker exec ${dockerContainerName} ${dockerWorkspaceDir}/init-tools.sh"
+            sh "docker exec ${dockerContainerName} cd ${dockerWorkspaceDir};./init-tools.sh"
             // Generate the version assets
-            sh "docker exec ${dockerContainerName} ${dockerWorkspaceDir}/build-managed.sh -OfficialBuildId=${ghprbActualCommit} -- /t:GenerateVersionSourceFile /p:GenerateVersionSourceFile=true"
+            sh "docker exec ${dockerContainerName} cd ${dockerWorkspaceDir};./build-managed.sh -OfficialBuildId=${ghprbActualCommit} -- /t:GenerateVersionSourceFile /p:GenerateVersionSourceFile=true"
             // Sync
-            sh "docker exec ${dockerContainerName} ${dockerWorkspaceDir}/sync.sh -p -portableLinux -- /p:ArchGroup=x64"
+            sh "docker exec ${dockerContainerName} cd ${dockerWorkspaceDir};./sync.sh -p -portableLinux -- /p:ArchGroup=x64"
             // Build product
-            sh "docker exec ${dockerContainerName} ${dockerWorkspaceDir}/build.sh -buildArch=x64 -${configuration} -portableLinux"
+            sh "docker exec ${dockerContainerName} cd ${dockerWorkspaceDir};./build.sh -buildArch=x64 -${configuration} -portableLinux"
             // Build tests 
-            sh "docker exec ${dockerContainerName} ${dockerWorkspaceDir}/build-tests.sh -buildArch=x64 -${configuration} -SkipTests -- /p:ArchiveTests=true /p:EnableDumpling=true"
+            sh "docker exec ${dockerContainerName} cd ${dockerWorkspaceDir};./build-tests.sh -buildArch=x64 -${configuration} -SkipTests -- /p:ArchiveTests=true /p:EnableDumpling=true"
             // Submit to Helix
             // Publish packages
         }
