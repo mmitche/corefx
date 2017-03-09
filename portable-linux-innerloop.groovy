@@ -25,7 +25,6 @@ node('ubuntu1604-20170216') {
             // Below might be great to wrap:
             // withDocker (dockerImageName) { 
             // Start docker, expose the workspace directory to the docker container
-            echo "docker run -d -v ${hostWorkspaceDir}:${dockerWorkspaceDir} --name ${dockerContainerName} ${dockerImageName} sleep 7200"
             sh "docker run -d -v ${hostWorkspaceDir}:${dockerWorkspaceDir} --name ${dockerContainerName} ${dockerImageName} sleep 7200"
         }
         stage ("Build corefx") {
@@ -39,7 +38,7 @@ node('ubuntu1604-20170216') {
                 sh "docker stop ${dockerContainerName}"
                 sh "docker rm ${dockerContainerName}"
             }
-            catch {
+            catch(Exception e) {
                 // Do nothing.
             }
         }
