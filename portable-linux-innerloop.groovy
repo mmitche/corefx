@@ -6,6 +6,11 @@
 
 def configuration = "Release";
 
+docker.image(dockerContainerName).inside {
+    checkout scm
+    sh './init-tools.sh'
+}
+
 node('ubuntu1604-20170216') {
     def dockerContainerName = BUILD_TAG
     def dockerRepository = 'microsoft/dotnet-buildtools-prereqs'
@@ -28,10 +33,6 @@ node('ubuntu1604-20170216') {
             // host OS into the target enlistment.  The real reason the scripts above are called are to
             // ensure we have the latest docker image, and that no other docker containers happen to be running on the machine.
             sh 'git clean -fxd'
-        }
-        docker.image(dockerContainerName).inside {
-            checkout scm
-            sh './init-tools.sh'
         }
         stage ("Start Docker") {
             // Below might be great to wrap:
