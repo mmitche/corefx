@@ -5,21 +5,21 @@
 // ... is wrapped by a try/finally that defines workspace cleanup
 
 def configuration = "Release";
+def dockerContainerName = BUILD_TAG
+def dockerRepository = 'microsoft/dotnet-buildtools-prereqs'
+def dockerTag = 'rhel7_prereqs_2'
+def dockerImageName = "${dockerRepository}:${dockerTag}"
+def hostWorkspaceDir = pwd()
+def dockerWorkspaceDir = '/root/workspace'
+def targetHelixQueues = 'Redhat.72.Amd64'
+def helixApiEndpoint = 'https://helix.dot.net/api/2016-06-28/jobs'
 
-docker.image(dockerContainerName).inside {
+docker.image(dockerImageName).inside {
     checkout scm
     sh './init-tools.sh'
 }
 
 node('ubuntu1604-20170216') {
-    def dockerContainerName = BUILD_TAG
-    def dockerRepository = 'microsoft/dotnet-buildtools-prereqs'
-    def dockerTag = 'rhel7_prereqs_2'
-    def dockerImageName = "${dockerRepository}:${dockerTag}"
-    def hostWorkspaceDir = pwd()
-    def dockerWorkspaceDir = '/root/workspace'
-    def targetHelixQueues = 'Redhat.72.Amd64'
-    def helixApiEndpoint = 'https://helix.dot.net/api/2016-06-28/jobs'
     try {
         stage ('Checkout Source') {
             checkout scm // Check out source control (based on parent scm settings)
