@@ -17,6 +17,7 @@ node('ubuntu1604-20170216') {
     try {
         docker.image(dockerImageName).inside {
             stage ('Checkout source') {
+                sh 'git clean -fxd'
                 checkout scm
             }
             stage ('Initialzie tools') {
@@ -65,7 +66,7 @@ node('ubuntu1604-20170216') {
         }*/
     }
     finally {
-        stage ("Clean-up Docker") {
+        /*stage ("Clean-up Docker") {
             try {
                 sh "docker stop ${dockerContainerName}"
                 sh "docker rm ${dockerContainerName}"
@@ -73,7 +74,7 @@ node('ubuntu1604-20170216') {
             catch(Exception e) {
                 // Do nothing.
             }
-        }
+        }*/
         stage ("Clean-up workspace") {
             step([$class: 'WsCleanup'])
         }
