@@ -4,6 +4,8 @@
 // }
 // ... is wrapped by a try/finally that defines workspace cleanup
 
+def configuration = "Release";
+
 node('ubuntu1604-20170216') {
     def dockerContainerName = BUILD_TAG
     def dockerRepository = 'microsoft/dotnet-buildtools-prereqs'
@@ -20,8 +22,12 @@ node('ubuntu1604-20170216') {
             sh "./init-tools.sh"
             // Initialize docker
             sh "./Tools/scripts/docker/init-docker.sh ${dockerImageName}"
+            // We should do this in a better, way but clean the enlistment up so that we un-bake info about the
+            // host OS into the target enlistment.  The real reason the scripts above are called are to
+            // ensure we have the latest docker image, and that no other docker containers happen to be running on the machine.
+            sh 'git clean -fxd'
         }
-        stage ("Start docker (Name: ${dockerContainerName}, Image: ${dockerImageName})") {
+        stage ("Start Docker") {
             // Below might be great to wrap:
             // withDocker (dockerImageName) { 
             // Start docker, expose the workspace directory to the docker container
@@ -30,10 +36,18 @@ node('ubuntu1604-20170216') {
         stage ("Build corefx") {
             // Generate the version assets
             sh "docker exec ${dockerContainerName} ${dockerWorkspaceDir}/build-managed.sh -OfficialBuildId=${ghprbActualCommit} -- /t:GenerateVersionSourceFile /p:GenerateVersionSourceFile=true"
+            // Sync
+            sh "docker exec ${dockerContainerName} ${dockerWorkspaceDir}/sync.sh -p -portableLinux -- /p:ArchGroup=x64"
+            // Build product
+            sh "docker exec ${dockerContainerName} ${dockerWorkspaceDir}/build.sh -buildArch=x64 -${configuration} -portableLinux"
+            // Build tests 
+            sh "docker exec ${dockerContainerName} ${dockerWorkspaceDir}/build-tests.sh -buildArch=x64 -${configuration} -SkipTests -- /p:ArchiveTests=true /p:EnableDumpling=true"
+            // Submit to Helix
+            // Publish packages
         }
     }
     finally {
-        stage ("Clean-up docker") {
+        stage ("Clean-up Docker") {
             try {
                 sh "docker stop ${dockerContainerName}"
                 sh "docker rm ${dockerContainerName}"
