@@ -13,14 +13,14 @@ def dockerWorkspaceDir = '/root/workspace'
 def targetHelixQueues = 'Redhat.72.Amd64'
 def helixApiEndpoint = 'https://helix.dot.net/api/2016-06-28/jobs'
 
-docker.image(dockerImageName).inside {
-    checkout scm
-    sh './init-tools.sh'
-}
-
 node('ubuntu1604-20170216') {
     def hostWorkspaceDir = pwd()
     try {
+        docker.image(dockerImageName).inside {
+            checkout scm
+            sh './init-tools.sh'
+        }
+
         stage ('Checkout Source') {
             checkout scm // Check out source control (based on parent scm settings)
         }
