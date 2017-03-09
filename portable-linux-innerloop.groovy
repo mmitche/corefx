@@ -13,6 +13,8 @@ node('ubuntu1604-20170216') {
     def dockerImageName = "${dockerRepository}:${dockerTag}"
     def hostWorkspaceDir = pwd()
     def dockerWorkspaceDir = '/root/workspace'
+    def targetHelixQueues = 'Redhat.72.Amd64'
+    def helixApiEndpoint = 'https://helix.dot.net/api/2016-06-28/jobs'
     try {
         stage ('Checkout Source') {
             checkout scm // Check out source control (based on parent scm settings)
@@ -27,13 +29,16 @@ node('ubuntu1604-20170216') {
             // ensure we have the latest docker image, and that no other docker containers happen to be running on the machine.
             sh 'git clean -fxd'
         }
+        docker.image(dockerContainerName).inside {
+            checkout scm
+            sh './init-tools.sh'
+        }
         stage ("Start Docker") {
             // Below might be great to wrap:
             // withDocker (dockerImageName) { 
             // Start docker, expose the workspace directory to the docker container
             sh "docker run -d -v ${hostWorkspaceDir}:${dockerWorkspaceDir} --name ${dockerContainerName} ${dockerImageName} sleep 7200"
         }
-        // ISSUE-Today we can't 
         stage ("Build corefx") {
             // Initialize the tools
             sh "docker exec ${dockerContainerName} cd ${dockerWorkspaceDir};./init-tools.sh"
@@ -45,7 +50,8 @@ node('ubuntu1604-20170216') {
             sh "docker exec ${dockerContainerName} cd ${dockerWorkspaceDir};./build.sh -buildArch=x64 -${configuration} -portableLinux"
             // Build tests 
             sh "docker exec ${dockerContainerName} cd ${dockerWorkspaceDir};./build-tests.sh -buildArch=x64 -${configuration} -SkipTests -- /p:ArchiveTests=true /p:EnableDumpling=true"
-            // Submit to Helix
+            // Submit to Helix.
+            sh "docker exec ${dockerContainerName} cd ${dockerWorkspaceDir};./Tools/msbuild.sh src/tests.builds /t:CloudBuild /p:ArchGroup=x64 /p:ConfigurationGroup=${configuration} /p:EnableCloudTest=true /p:TestProduct=corefx /p:TimeoutInSeconds=1200 /p:TargetOS=Linux /p:BuildMoniker=none /p:CloudDropAccountName=dotnetbuilddrops /p:CloudResultsAccountName=dotnetjobresults /p:CloudDropAccessToken=$(CloudDropAccessToken) /p:CloudResultsAccessToken=$(OutputCloudResultsAccessToken) /p:HelixApiAccessKey=$(HelixApiAccessKey) /p:HelixApiEndpoint=${helixApiEndpoint} /p:Branch=${GIT_BRANCH} /p:TargetQueue=${targetHelixQueues} /p:OfficialBuildId=${ghprbActualCommit}"
             // Publish packages
         }
     }
