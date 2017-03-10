@@ -15,20 +15,17 @@ def helixApiEndpoint = 'https://helix.dot.net/api/2016-06-28/jobs'
 
 node('ubuntu1604-20170216') {
     try {
-        // Workaround HOME being set to / by default in the docker.image (screws with NuGet) 
-        withEnv(['HOME=']) {
-            docker.image(dockerImageName).inside {
-                stage ('Checkout source') {
-                    checkout scm
-                }
-                stage ('Initialzie tools') {
-                    // Init tools
-                    sh './init-tools.sh'
-                }
-                stage ('Generate version assets') {
-                    // Generate the version assets
-                    sh "./build-managed.sh -- /t:GenerateVersionSourceFile /p:GenerateVersionSourceFile=true"
-                }
+        docker.image(dockerImageName).inside {
+            stage ('Checkout source') {
+                checkout scm
+            }
+            stage ('Initialzie tools') {
+                // Init tools
+                sh './init-tools.sh'
+            }
+            stage ('Generate version assets') {
+                // Generate the version assets
+                sh "./build-managed.sh -- /t:GenerateVersionSourceFile /p:GenerateVersionSourceFile=true"
             }
         }
 
