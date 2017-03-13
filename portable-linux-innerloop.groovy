@@ -19,13 +19,25 @@ node('ubuntu1604-20170216') {
             stage ('Checkout source') {
                 checkout scm
             }
-            stage ('Initialzie tools') {
+            stage ('Initialize tools') {
                 // Init tools
                 sh './init-tools.sh'
             }
             stage ('Generate version assets') {
-                // Generate the version assets
+                // Generate the version assets.  Do we need to even do this for non-official builds?
                 sh "./build-managed.sh -- /t:GenerateVersionSourceFile /p:GenerateVersionSourceFile=true"
+            }
+            stage ('Sync') {
+                sh "./sync.sh -p -portableLinux -- /p:ArchGroup=x64"
+            }
+            stage ('Build Product') {
+                sh "./build.sh -buildArch=x64 -${configuration} -portableLinux"
+            }
+            stage ('Build Tests') {
+                sh "./build-tests.sh -buildArch=x64 -${configuration}"" -SkipTests -- /p:ArchiveTests=true /p:EnableDumpling=true"
+            }
+            stage ('Submit Helix') {
+
             }
         }
 
