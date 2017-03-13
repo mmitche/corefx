@@ -34,7 +34,7 @@ node('ubuntu1604-20170216') {
                 sh "./build.sh -buildArch=x64 -${configuration} -portableLinux"
             }
             stage ('Build Tests') {
-                sh "./build-tests.sh -buildArch=x64 -${configuration}"" -SkipTests -- /p:ArchiveTests=true /p:EnableDumpling=true"
+                sh "./build-tests.sh -buildArch=x64 -${configuration} -SkipTests -- /p:ArchiveTests=true /p:EnableDumpling=true"
             }
             stage ('Submit Helix') {
 
