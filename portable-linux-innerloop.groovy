@@ -9,6 +9,7 @@ def dockerRepository = 'microsoft/dotnet-buildtools-prereqs'
 def dockerTag = 'rhel7_prereqs_2'
 def dockerImageName = "${dockerRepository}:${dockerTag}"
 def targetHelixQueues = 'Redhat.72.Amd64,Ubuntu.1604.Amd64'
+def waitForHelixRuns = [:]
 
 node('ubuntu1604-20170216') {
     try {
@@ -52,7 +53,6 @@ node('ubuntu1604-20170216') {
                 //      QueueId
                 //      QueueTimeUtc
                 // }
-                def waitForHelixRuns = [:]
                 for (int i = 0; i < helixRuns.size(); i++) {
                     def currentRun = helixRuns[i];
                     def queueId = currentRun['QueueId']
