@@ -57,7 +57,7 @@ node('ubuntu1604-20170216') {
                     def currentRun = helixRuns[i];
                     def queueId = currentRun['QueueId']
                     def correlationId = currentRun['CorrelationId']
-                    waitForHelixRuns[currentRun['QueueId']] = {
+                    waitForHelixRuns[currentRun['QueueId'] ] = {
                         waitUntil {
                             echo "Running tests on ${queueId} (${correlationId})"
                             return true;
