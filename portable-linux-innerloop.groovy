@@ -11,7 +11,7 @@ def dockerRepository = 'microsoft/dotnet-buildtools-prereqs'
 def dockerTag = 'rhel7_prereqs_2'
 def dockerImageName = "${dockerRepository}:${dockerTag}"
 def targetHelixQueues = 'Redhat.72.Amd64,Ubuntu.1604.Amd64'
-def waitForHelixRuns = [:]
+def helixRuns
 
 standardDockerNode(dockerImageName) {
     stage ('Checkout source') {
@@ -42,30 +42,9 @@ standardDockerNode(dockerImageName) {
             sh "./Tools/msbuild.sh src/upload-tests.proj /p:ArchGroup=x64 /p:ConfigurationGroup=${configuration} /p:EnableCloudTest=true /p:TestProduct=corefx /p:TimeoutInSeconds=1200 /p:TargetOS=Linux /p:CloudDropAccountName=dotnetbuilddrops /p:CloudResultsAccountName=dotnetjobresults /p:CloudDropAccessToken=\$CloudDropAccessToken /p:CloudResultsAccessToken=\$OutputCloudResultsAccessToken /p:HelixApiAccessKey=\$HelixApiAccessKey /p:HelixApiEndpoint=https://helix.dot.net/api/2016-06-28/jobs /p:Branch=${ghprbPullId} /p:TargetQueues=\\\"${targetHelixQueues}\\\" /p:HelixLogFolder=${WORKSPACE}/bin/ /p:HelixCorrelationInfoFileName=SubmittedHelixRuns.txt"
         }
 
-        // This moves into shared code.
-        // Something like:
-        // waitForHelixRuns(fileContainingRuns)
-        // Read the json in and spawn off to wait for these to finish
-        def helixRuns = readJSON file: 'bin/SubmittedHelixRuns.txt'
-        // Is an array of:
-        // {
-        //      CorrelationId
-        //      QueueId
-        //      QueueTimeUtc
-        // }
-        for (int i = 0; i < helixRuns.size(); i++) {
-            def currentRun = helixRuns[i];
-            def queueId = currentRun['QueueId']
-            def correlationId = currentRun['CorrelationId']
-            waitForHelixRuns[currentRun['QueueId'] ] = {
-                waitUntil {
-                    echo "Running tests on ${queueId} (${correlationId})"
-                    return true;
-                }
-            }
-        }
+        helixRuns = readJSON file: 'bin/SubmittedHelixRuns.txt'
     }
     stage ('Execute Tests') {
-        parallel waitForHelixRuns
+        waitForHelixRuns(helixRuns)
     }
 }
