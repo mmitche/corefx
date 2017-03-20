@@ -11,9 +11,9 @@ def dockerRepository = 'microsoft/dotnet-buildtools-prereqs'
 def dockerTag = 'rhel7_prereqs_2'
 def dockerImageName = "${dockerRepository}:${dockerTag}"
 def targetHelixQueues = 'Redhat.72.Amd64,Ubuntu.1604.Amd64'
-def helixRuns
+def submittedHelixJson
 
-standardDockerNode(dockerImageName) {
+simpleDockerNode(dockerImageName) {
     stage ('Checkout source') {
         checkout scm
     }
@@ -39,12 +39,15 @@ standardDockerNode(dockerImageName) {
         withCredentials([string(credentialsId: 'CloudDropAccessToken', variable: 'CloudDropAccessToken'),
                             string(credentialsId: 'OutputCloudResultsAccessToken', variable: 'OutputCloudResultsAccessToken'),
                             string(credentialsId: 'HelixApiAccessKey', variable: 'HelixApiAccessKey')]) {
-            sh "./Tools/msbuild.sh src/upload-tests.proj /p:ArchGroup=x64 /p:ConfigurationGroup=${configuration} /p:EnableCloudTest=true /p:TestProduct=corefx /p:TimeoutInSeconds=1200 /p:TargetOS=Linux /p:CloudDropAccountName=dotnetbuilddrops /p:CloudResultsAccountName=dotnetjobresults /p:CloudDropAccessToken=\$CloudDropAccessToken /p:CloudResultsAccessToken=\$OutputCloudResultsAccessToken /p:HelixApiAccessKey=\$HelixApiAccessKey /p:HelixApiEndpoint=https://helix.dot.net/api/2016-06-28/jobs /p:Branch=${ghprbPullId} /p:TargetQueues=\\\"${targetHelixQueues}\\\" /p:HelixLogFolder=${WORKSPACE}/bin/ /p:HelixCorrelationInfoFileName=SubmittedHelixRuns.txt"
+            // The hash and other items should be generic enough to allow for PR and non PR.
+            sh "./Tools/msbuild.sh src/upload-tests.proj /p:ArchGroup=x64 /p:ConfigurationGroup=${configuration} /p:EnableCloudTest=true /p:TestProduct=corefx /p:TimeoutInSeconds=1200 /p:TargetOS=Linux /p:CloudDropAccountName=dotnetbuilddrops /p:CloudResultsAccountName=dotnetjobresults /p:CloudDropAccessToken=\$CloudDropAccessToken /p:CloudResultsAccessToken=\$OutputCloudResultsAccessToken /p:HelixApiAccessKey=\$HelixApiAccessKey /p:HelixApiEndpoint=https://helix.dot.net/api/2016-06-28/jobs /p:Branch=${ghprbPullId} /p:TargetQueues=\\\"${targetHelixQueues}\\\" /p:HelixLogFolder=${WORKSPACE}/bin/ /p:HelixCorrelationInfoFileName=SubmittedHelixRuns.txt /p:Build=${ghprbActualCommit}"
         }
 
-        helixRuns = readJSON file: 'bin/SubmittedHelixRuns.txt'
+        // Read the json in
+        submittedHelixJson = readJSON file: 'bin/SubmittedHelixRuns.txt'
     }
+
     stage ('Execute Tests') {
-        waitForHelixRuns(helixRuns)
+        waitForHelixRuns(submittedHelixJson)
     }
 }
