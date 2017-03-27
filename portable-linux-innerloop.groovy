@@ -6,7 +6,10 @@
 
 @Library('dotnet-ci') _
 
-def configuration = "Release";
+// Incoming parameters
+def configuration = Configuration;
+
+// Additional variables local to this pipeline
 def dockerRepository = 'microsoft/dotnet-buildtools-prereqs'
 def dockerTag = 'rhel7_prereqs_2'
 def dockerImageName = "${dockerRepository}:${dockerTag}"
