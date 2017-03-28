@@ -12,7 +12,7 @@ def branch = GithubBranchName
 // Define innerloop testing.  These jobs run on every merge and a subset of them run on every PR, the ones
 // that don't run per PR can be requested via a magic phrase.
 // **************************
-newPipeline = Pipelines.createPipelineForGithub(this, project, branch, 'portable-linux-innerloop.groovy')
+newPipeline = Pipeline.createPipelineForGithub(this, project, branch, 'portable-linux-innerloop.groovy')
 
 ['netcoreapp'].each { targetGroup ->
 	['Debug', 'Release'].each { configurationGroup ->
