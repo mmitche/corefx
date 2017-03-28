@@ -29,7 +29,7 @@ simpleDockerNode(dockerImageName) {
         sh "./build-managed.sh -- /t:GenerateVersionSourceFile /p:GenerateVersionSourceFile=true"
     }
     stage ('Sync') {
-        sh "./sync.sh -p -portableLinux -- /p:ArchGroup=x64 /clp:showcommandline"
+        sh "./sync.sh -p -portableLinux -- /p:ArchGroup=x64 /v:normal /clp:showcommandline"
     }
     stage ('Build Product') {
         sh "./build.sh -buildArch=x64 -${configuration} -portableLinux"
