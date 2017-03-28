@@ -17,7 +17,7 @@ newPipeline = Pipeline.createPipelineForGithub(this, project, branch, 'portable-
 ['netcoreapp'].each { targetGroup ->
 	['Debug', 'Release'].each { configurationGroup ->
 		['PortableLinux'].each { osName ->
-			newPipeline.triggerPipelineOnEveryGithubPR("${osName} ${configurationGroup}", ['Configuration', configurationGroup])
+			newPipeline.triggerPipelineOnEveryGithubPR("${osName} ${configurationGroup}", ['Configuration':configurationGroup])
 		}
 	}
 }
