@@ -18,6 +18,7 @@ newPipeline = Pipeline.createPipelineForGithub(this, project, branch, 'portable-
 	['Debug', 'Release'].each { configurationGroup ->
 		['PortableLinux'].each { osName ->
 			newPipeline.triggerPipelineOnEveryGithubPR("${osName} ${configurationGroup}", ['Configuration':configurationGroup])
+			newPipeline.triggerPipelineOnGithubPush("${osName} ${configurationGroup}", ['Configuration':configurationGroup])
 		}
 	}
 }
