@@ -1,7 +1,7 @@
 // Import the utility functionality.
 
 import jobs.generation.JobReport;
-import src.org.dotnet.ci.pipelines.Pipeline
+import org.dotnet.ci.pipelines.Pipeline
 
 // The input project name (e.g. dotnet/corefx)
 def project = GithubProject
