@@ -123,26 +123,16 @@ namespace System
 
         /// <summary>
         /// Create a new span over a portion of a regular managed object. This can be useful
-        /// if part of a managed object represents a "fixed array." This is dangerous because
-        /// "length" is not checked, nor is the fact that "rawPointer" actually lies within the object.
+        /// if part of a managed object represents a "fixed array." This is dangerous because neither the
+        /// <paramref name="length"/> is checked, nor <paramref name="obj"/> being null, nor the fact that
+        /// "rawPointer" actually lies within <paramref name="obj"/>.
         /// </summary>
         /// <param name="obj">The managed object that contains the data to span over.</param>
         /// <param name="objectData">A reference to data within that object.</param>
         /// <param name="length">The number of <typeparamref name="T"/> elements the memory contains.</param>
-        /// <exception cref="System.ArgumentNullException">
-        /// Thrown when the specified object is null.
-        /// </exception>
-        /// <exception cref="System.ArgumentOutOfRangeException">
-        /// Thrown when the specified <paramref name="length"/> is negative.
-        /// </exception>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Span<T> DangerousCreate(object obj, ref T objectData, int length)
         {
-            if (obj == null)
-                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.obj);
-            if (length < 0)
-                ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.length);
-
             Pinnable<T> pinnable = Unsafe.As<Pinnable<T>>(obj);
             IntPtr byteOffset = Unsafe.ByteOffset<T>(ref pinnable.Data, ref objectData);
             return new Span<T>(pinnable, byteOffset, length);
@@ -331,71 +321,10 @@ namespace System
             if ((uint)length > (uint)destLength)
                 return false;
 
-            unsafe
-            {
-                ref T src = ref DangerousGetPinnableReference();
-                ref T dst = ref destination.DangerousGetPinnableReference();
-
-                IntPtr srcMinusDst = Unsafe.ByteOffset<T>(ref dst, ref src);
-                bool srcGreaterThanDst = (sizeof(IntPtr) == sizeof(int)) ? srcMinusDst.ToInt32() >= 0 : srcMinusDst.ToInt64() >= 0;
-                IntPtr tailDiff;
-
-                if (srcGreaterThanDst)
-                {
-                    // If the start of source is greater than the start of destination, then we need to calculate
-                    // the different between the end of destination relative to the start of source.
-                    tailDiff = Unsafe.ByteOffset<T>(ref Unsafe.Add<T>(ref dst, destLength), ref src);
-                }
-                else
-                {
-                    // If the start of source is less than the start of destination, then we need to calculate
-                    // the different between the end of source relative to the start of destunation.
-                    tailDiff = Unsafe.ByteOffset<T>(ref Unsafe.Add<T>(ref src, length), ref dst);
-                }
-
-                // If the source is entirely before or entirely after the destination and the type inside the span is not
-                // itself a reference type or containing reference types, then we can do a simple block copy of the data.
-                bool isOverlapped = (sizeof(IntPtr) == sizeof(int)) ? tailDiff.ToInt32() < 0 : tailDiff.ToInt64() < 0;
-                if (!isOverlapped && !SpanHelpers.IsReferenceOrContainsReferences<T>())
-                {
-                    ref byte dstBytes = ref Unsafe.As<T, byte>(ref dst);
-                    ref byte srcBytes = ref Unsafe.As<T, byte>(ref src);
-                    ulong byteCount = (ulong)length * (ulong)Unsafe.SizeOf<T>();
-                    ulong index = 0;
-
-                    while (index < byteCount)
-                    {
-                        uint blockSize = byteCount > uint.MaxValue ? uint.MaxValue : (uint)byteCount;
-                        Unsafe.CopyBlock(
-                            ref Unsafe.Add(ref dstBytes, (IntPtr)index),
-                            ref Unsafe.Add(ref srcBytes, (IntPtr)index),
-                            blockSize);
-                        index += blockSize;
-                    }
-                }
-                else
-                {
-                    if (srcGreaterThanDst)
-                    {
-                        // Source address greater than or equal to destination address. Can do normal copy.
-                        for (int i = 0; i < length; i++)
-                        {
-                            Unsafe.Add<T>(ref dst, i) = Unsafe.Add<T>(ref src, i);
-                        }
-                    }
-                    else
-                    {
-                        // Source address less than destination address. Must do backward copy.
-                        int i = length;
-                        while (i-- != 0)
-                        {
-                            Unsafe.Add<T>(ref dst, i) = Unsafe.Add<T>(ref src, i);
-                        }
-                    }
-                }
-
-                return true;
-            }
+            ref T src = ref DangerousGetPinnableReference();
+            ref T dst = ref destination.DangerousGetPinnableReference();
+            SpanHelpers.CopyTo<T>(ref dst, destLength, ref src, length);
+            return true;
         }
 
         /// <summary>
@@ -594,6 +523,20 @@ namespace System
         }
 
         /// <summary>
+        /// Creates a new readonly span over the portion of the target string.
+        /// </summary>
+        /// <param name="text">The target string.</param>
+        /// <exception cref="System.ArgumentNullException">Thrown when <paramref name="text"/> is null.</exception>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ReadOnlySpan<char> AsSpan(this string text)
+        {
+            if (text == null)
+                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.text);
+
+            return new ReadOnlySpan<char>(Unsafe.As<Pinnable<char>>(text), StringAdjustment, text.Length);
+        }
+
+        /// <summary>
         /// Casts a Span of one primitive type <typeparamref name="TFrom"/> to another primitive type <typeparamref name="TTo"/>.
         /// These types may not contain pointers or references. This is checked at runtime in order to preserve type safety.
         /// </summary>
@@ -651,70 +594,6 @@ namespace System
             return new ReadOnlySpan<TTo>(Unsafe.As<Pinnable<TTo>>(source.Pinnable), source.ByteOffset, newLength);
         }
 
-        /// <summary>
-        /// Creates a new readonly span over the portion of the target string.
-        /// </summary>
-        /// <param name="text">The target string.</param>
-        /// <exception cref="System.ArgumentNullException">Thrown when <paramref name="text"/> is null.</exception>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ReadOnlySpan<char> Slice(this string text)
-        {
-            if (text == null)
-                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.text);
-
-            return new ReadOnlySpan<char>(Unsafe.As<Pinnable<char>>(text), StringAdjustment, text.Length);
-        }
-
-        /// <summary>
-        /// Creates a new readonly span over the portion of the target string, beginning at 'start'.
-        /// </summary>
-        /// <param name="text">The target string.</param>
-        /// <param name="start">The index at which to begin this slice.</param>
-        /// <exception cref="System.ArgumentNullException">Thrown when <paramref name="text"/> is null.</exception>
-        /// <exception cref="System.ArgumentOutOfRangeException">
-        /// Thrown when the specified <paramref name="start"/> index is not in range (&lt;0 or &gt;Length).
-        /// </exception>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ReadOnlySpan<char> Slice(this string text, int start)
-        {
-            if (text == null)
-                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.text);
-            int textLength = text.Length;
-            if ((uint)start > (uint)textLength)
-                ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.start);
-
-            unsafe
-            {
-                byte* byteOffset = ((byte*)StringAdjustment) + (uint)(start * sizeof(char));
-                return new ReadOnlySpan<char>(Unsafe.As<Pinnable<char>>(text), (IntPtr)byteOffset, textLength - start);
-            }
-        }
-
-        /// <summary>
-        /// Creates a new readonly span over the portion of the target string, beginning at <paramref name="start"/>, of given <paramref name="length"/>.
-        /// </summary>
-        /// <param name="text">The target string.</param>
-        /// <param name="start">The index at which to begin this slice.</param>
-        /// <param name="length">The number of items in the span.</param>
-        /// <exception cref="System.ArgumentNullException">Thrown when <paramref name="text"/> is null.</exception>
-        /// <exception cref="System.ArgumentOutOfRangeException">
-        /// Thrown when the specified <paramref name="start"/> or end index is not in range (&lt;0 or &gt;=Length).
-        /// </exception>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static ReadOnlySpan<char> Slice(this string text, int start, int length)
-        {
-            if (text == null)
-                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.text);
-            int textLength = text.Length;
-            if ((uint)start > (uint)textLength || (uint)length > (uint)(textLength - start))
-                ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.start);
-
-            unsafe
-            {
-                byte* byteOffset = ((byte*)StringAdjustment) + (uint)(start * sizeof(char));
-                return new ReadOnlySpan<char>(Unsafe.As<Pinnable<char>>(text), (IntPtr)byteOffset, length);
-            }
-        }
 
         private static readonly IntPtr StringAdjustment = MeasureStringAdjustment();
 
