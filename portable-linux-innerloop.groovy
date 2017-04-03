@@ -23,7 +23,7 @@ simpleDockerNode(dockerImageName) {
     }
     stage ('Initialize tools') {
         // Init tools
-        sh './init-tools.sh; cat init-tools.log'
+        sh './init-tools.sh || cat init-tools.log'
     }
     stage ('Generate version assets') {
         // Generate the version assets.  Do we need to even do this for non-official builds?
