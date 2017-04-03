@@ -10,6 +10,7 @@
     <XUnitRunnerPackageId Condition="'$(TargetGroup)' != 'netfx'">xunit.console.netcore</XUnitRunnerPackageId>
     <XUnitRunnerPackageId Condition="'$(TargetGroup)' == 'netfx'">xunit.runner.console</XUnitRunnerPackageId>
     <NuGetTargetMoniker Condition="'$(TargetGroup)' == 'uapaot'">.NETStandard,Version=v2.0</NuGetTargetMoniker>
+    <NuGetTargetMoniker Condition="'$(TargetGroup)' == 'uap'">.NETStandard,Version=v2.0</NuGetTargetMoniker>
   </PropertyGroup>
   <ItemGroup>
     <None Include="project.json" />
@@ -36,6 +37,65 @@
   </ItemGroup>
 
   <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), dir.targets))\dir.targets" />
+
+  <!-- Retrieve the UAP Tools to the TestHost folder -->
+  <Target Name="CopyUAPToolsToTestHost" 
+          AfterTargets="RestorePackages"
+          Condition="'$(TargetGroup)'=='uap'" >
+
+    <PropertyGroup>
+      <UAPToolsPackageVersion>1.0.2</UAPToolsPackageVersion>
+      <UAPToolsPackageName>Microsoft.DotNet.UAP.TestTools</UAPToolsPackageName>
+
+      <UAPToolsFolder Condition="'$(UAPToolsFolder)'==''">$(PackagesDir)$(UAPToolsPackageName)\$(UAPToolsPackageVersion)\Tools</UAPToolsFolder>
+      <UAPToolsFolder>$(UAPToolsFolder.Replace('/', '\'))</UAPToolsFolder>
+    </PropertyGroup>
+
+    <!-- Give a warning that the UAPToolsFolder is not set and that tests won't run -->
+    <Warning Text="Could not find the UAP Tools at '$(UAPToolsFolder)'. Please run sync." Condition="'$(UAPToolsFolder)'=='' or !Exists('$(UAPToolsFolder)')" />
+
+    <ItemGroup Condition="'$(UAPToolsFolder)'!=''">
+      <RunnerFolderContents Include="$(UAPToolsFolder)\Runner\**\*" />
+      <LauncherFolderContents Include="$(UAPToolsFolder)\Launcher\**\*" />
+    </ItemGroup>
+
+    <Copy Condition="'$(UAPToolsFolder)'!=''"
+          SourceFiles="@(RunnerFolderContents)" 
+          DestinationFolder="$(TestHostRootPath)\Runner\%(RecursiveDir)"
+          SkipUnchangedFiles="true"/>
+
+    <Copy Condition="'$(UAPToolsFolder)'!=''"
+          SourceFiles="@(LauncherFolderContents)" 
+          DestinationFolder="$(TestHostRootPath)\Launcher\%(RecursiveDir)"
+          SkipUnchangedFiles="true"/>
+  </Target>
+
+  <Target Name="VerifyMatchingProjectNVersions"
+          BeforeTargets="Build">
+    <Error Condition="'$(ProjectNTfsExpectedPrerelease)' != '$(ProjectNTfsTestILCExpectedPrerelease)'" Text="The versions of ProjectN Targeting pack and TestILC have gone out of sync. Please make sure both of the prerelease versions on dependencies.props match." />
+  </Target>
+
+  <Target Name="CopyTestILCToolsToTestHost"
+          AfterTargets="RestorePackages"
+          Condition="'$(TargetGroup)' == 'uapaot'">
+    <PropertyGroup>
+      <TestILCToolsPackageName>TestILCNugetPackageForCoreFX</TestILCToolsPackageName>
+      <TestILCFolder Condition="'$(TestILCFolder)' == ''">$(PackagesDir)$(TestILCToolsPackageName)\$(ProjectNTfsTestILCPackageVersion)\TestILC</TestILCFolder>
+      <TestILCFolder>$(TestILCFolder.Replace('/', '\'))</TestILCFolder>
+    </PropertyGroup>
+
+    <Warning Text="Could not find the TestILC Tools at '$(TestILCFolder)'. Please run sync." Condition="'$(TestILCFolder)' == '' or !Exists('$(TestILCFolder)')" />
+
+    <ItemGroup Condition="'$(TestILCFolder)'!=''">
+      <TestILCFolderContents Include="$(TestILCFolder)\**\*" />
+    </ItemGroup>
+
+    <Copy Condition="'$(TestILCFolder)'!=''"
+          SourceFiles="%(TestILCFolderContents.FullPath)"
+          DestinationFiles="$(TestHostRootPath)\TestILC\%(TestILCFolderContents.RecursiveDir)%(TestILCFolderContents.Filename)%(TestILCFolderContents.Extension)"
+          SkipUnchangedFiles="true" />
+
+  </Target>
 
   <Target Name="AddXunitConsoleRunner" BeforeTargets="ResolveReferences" Condition="'$(TargetGroup)' == 'netfx'">
     <Error Condition="!Exists('$(PackagesDir)$(XUnitRunnerPackageId)\$(XUnitPackageVersion)\tools\xunit.console.exe')"

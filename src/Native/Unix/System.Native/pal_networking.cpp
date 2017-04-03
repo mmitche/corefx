@@ -167,30 +167,14 @@ constexpr T Max(T left, T right)
 
 static void ConvertByteArrayToIn6Addr(in6_addr& addr, const uint8_t* buffer, int32_t bufferLength)
 {
-#if HAVE_IN6_U
-    assert(bufferLength == ARRAY_SIZE(addr.__in6_u.__u6_addr8));
-    memcpy_s(addr.__in6_u.__u6_addr8, ARRAY_SIZE(addr.__in6_u.__u6_addr8), buffer, UnsignedCast(bufferLength));
-#elif HAVE_U6_ADDR
-    assert(bufferLength == ARRAY_SIZE(addr.__u6_addr.__u6_addr8));
-    memcpy_s(addr.__u6_addr.__u6_addr8, ARRAY_SIZE(addr.__u6_addr.__u6_addr8), buffer, UnsignedCast(bufferLength));
-#else
     assert(bufferLength == ARRAY_SIZE(addr.s6_addr));
     memcpy_s(addr.s6_addr, ARRAY_SIZE(addr.s6_addr), buffer, UnsignedCast(bufferLength));
-#endif
 }
 
 static void ConvertIn6AddrToByteArray(uint8_t* buffer, int32_t bufferLength, const in6_addr& addr)
 {
-#if HAVE_IN6_U
-    assert(bufferLength == ARRAY_SIZE(addr.__in6_u.__u6_addr8));
-    memcpy_s(buffer, UnsignedCast(bufferLength), addr.__in6_u.__u6_addr8, ARRAY_SIZE(addr.__in6_u.__u6_addr8));
-#elif HAVE_U6_ADDR
-    assert(bufferLength == ARRAY_SIZE(addr.__u6_addr.__u6_addr8));
-    memcpy_s(buffer, UnsignedCast(bufferLength), addr.__u6_addr.__u6_addr8, ARRAY_SIZE(addr.__u6_addr.__u6_addr8));
-#else
     assert(bufferLength == ARRAY_SIZE(addr.s6_addr));
     memcpy_s(buffer, UnsignedCast(bufferLength), addr.s6_addr, ARRAY_SIZE(addr.s6_addr));
-#endif
 }
 
 static void ConvertByteArrayToSockAddrIn6(sockaddr_in6& addr, const uint8_t* buffer, int32_t bufferLength)
@@ -247,7 +231,7 @@ static int32_t ConvertGetAddrInfoAndGetNameInfoErrorsToPal(int32_t error)
             return PAL_EAI_NONAME;
     }
 
-    assert(false && "Unknown AddrInfo error flag");
+    assert_err(false, "Unknown AddrInfo error flag", error);
     return -1;
 }
 
@@ -427,7 +411,7 @@ static int ConvertGetHostErrorPlatformToPal(int error)
             return PAL_NO_DATA;
 
         default:
-            assert(false && "Unknown gethostbyname/gethostbyaddr error code");
+            assert_err(false, "Unknown gethostbyname/gethostbyaddr error code", error);
             return PAL_HOST_NOT_FOUND;
     }
 }
@@ -572,27 +556,27 @@ static int GetHostByNameHelper(const uint8_t* hostname, hostent** entry)
 
         int getHostErrno;
         int err = gethostbyname_r(reinterpret_cast<const char*>(hostname), result, scratch, scratchLen, entry, &getHostErrno);
-        switch (err)
+        if (!err && *entry != nullptr)
         {
-            case 0:
-                *entry = result;
-                return 0;
-
-            case ERANGE:
-                free(buffer);
-                size_t tmpScratchLen;
-                if (!multiply_s(scratchLen, static_cast<size_t>(2), &tmpScratchLen))
-                {
-                    *entry = nullptr;
-                    return PAL_NO_MEM;
-                }
-                scratchLen = tmpScratchLen;
-                break;
-
-            default:
-                free(buffer);
+            assert(*entry == result);
+            return 0;
+        }
+        else if (err == ERANGE)
+        {
+            free(buffer);
+            size_t tmpScratchLen;
+            if (!multiply_s(scratchLen, static_cast<size_t>(2), &tmpScratchLen))
+            {
                 *entry = nullptr;
-                return getHostErrno;
+                return PAL_NO_MEM;
+            }
+            scratchLen = tmpScratchLen;
+        }
+        else
+        {
+            free(buffer);
+            *entry = nullptr;
+            return err ? err : HOST_NOT_FOUND;
         }
     }
 }
@@ -651,27 +635,27 @@ static int GetHostByAddrHelper(const uint8_t* addr, const socklen_t addrLen, int
 
         int getHostErrno;
         int err = gethostbyaddr_r(addr, addrLen, type, result, scratch, scratchLen, entry, &getHostErrno);
-        switch (err)
+        if (!err && *entry != nullptr)
         {
-            case 0:
-                *entry = result;
-                return 0;
-
-            case ERANGE:
-                free(buffer);
-                size_t tmpScratchLen;
-                if (!multiply_s(scratchLen, static_cast<size_t>(2), &tmpScratchLen))
-                {
-                    *entry = nullptr;
-                    return PAL_NO_MEM;
-                }
-                scratchLen = tmpScratchLen;
-                break;
-
-            default:
-                free(buffer);
+            assert(*entry == result);
+            return 0;
+        }
+        else if (err == ERANGE)
+        {
+            free(buffer);
+            size_t tmpScratchLen;
+            if (!multiply_s(scratchLen, static_cast<size_t>(2), &tmpScratchLen))
+            {
                 *entry = nullptr;
-                return getHostErrno;
+                return PAL_NO_MEM;
+            }
+            scratchLen = tmpScratchLen;
+        }
+        else
+        {
+            free(buffer);
+            *entry = nullptr;
+            return err ? err : HOST_NOT_FOUND;
         }
     }
 }
@@ -2574,7 +2558,7 @@ static SocketEvents GetSocketEvents(int16_t filter, uint16_t flags)
             break;
 
         default:
-            assert(false && "unexpected kqueue filter type");
+            assert_msg(false, "unexpected kqueue filter type", static_cast<int>(filter));
             return PAL_SA_NONE;
     }
 

@@ -2,7 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+#if XMLSERIALIZERGENERATOR
+namespace Microsoft.XmlSerializer.Generator
+#else
 namespace System.Xml.Serialization
+#endif
 {
     using System.Reflection;
     using System.Collections;
@@ -17,6 +21,7 @@ namespace System.Xml.Serialization
     using System.Diagnostics;
     using System.Collections.Generic;
     using System.Runtime.Versioning;
+    using System.Xml;
 
     /// <include file='doc\XmlSerializer.uex' path='docs/doc[@for="XmlDeserializationEvents"]/*' />
     /// <devdoc>
@@ -113,14 +118,14 @@ namespace System.Xml.Serialization
     /// </devdoc>
     public class XmlSerializer
     {
-        public enum SerializationMode
+        internal enum SerializationMode
         {
             CodeGenOnly,
             ReflectionOnly,
             ReflectionAsBackup
         }
 
-        public static SerializationMode Mode { get; set; } = SerializationMode.ReflectionAsBackup;
+        internal static SerializationMode Mode { get; set; } = SerializationMode.ReflectionAsBackup;
 
         private static bool ReflectionMethodEnabled
         {
@@ -139,8 +144,10 @@ namespace System.Xml.Serialization
         private XmlDeserializationEvents _events = new XmlDeserializationEvents();
 #if uapaot
         private XmlSerializer innerSerializer;
-#endif
         public string DefaultNamespace = null;
+#else
+        internal string DefaultNamespace = null;
+#endif
         private Type rootType;
 
         private static TempAssemblyCache s_cache = new TempAssemblyCache();

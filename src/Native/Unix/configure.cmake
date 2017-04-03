@@ -183,18 +183,6 @@ check_type_size(
 set(CMAKE_EXTRA_INCLUDE_FILES) # reset CMAKE_EXTRA_INCLUDE_FILES
 # /statfs
 
-check_struct_has_member(
-    "struct in6_addr"
-    __in6_u
-    "netdb.h"
-    HAVE_IN6_U)
-
-check_struct_has_member(
-    "struct in6_addr"
-    __u6_addr
-    "netdb.h"
-    HAVE_U6_ADDR)
-
 check_cxx_source_compiles(
     "
     #include <string.h>
@@ -350,6 +338,21 @@ check_cxx_source_runs(
     }
     "
     HAVE_CLOCK_MONOTONIC)
+
+check_cxx_source_runs(
+    "
+    #include <stdlib.h>
+    #include <time.h>
+    #include <sys/time.h>
+    int main()
+    {
+        int ret;
+        struct timespec ts;
+        ret = clock_gettime(CLOCK_REALTIME, &ts);
+        exit(ret);
+    }
+    "
+    HAVE_CLOCK_REALTIME)
 
 check_function_exists(
     mach_absolute_time
