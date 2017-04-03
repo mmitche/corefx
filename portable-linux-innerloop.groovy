@@ -52,6 +52,6 @@ simpleDockerNode(dockerImageName) {
     }
 
     stage ('Execute Tests') {
-        waitForHelixRuns(submittedHelixJson)
+        waitForHelixRuns(submittedHelixJson, "Portable Linux ${configuration}")
     }
 }
