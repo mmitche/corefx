@@ -14,7 +14,7 @@ def configuration = params.Configuration
 def dockerRepository = 'microsoft/dotnet-buildtools-prereqs'
 def dockerTag = 'rhel7_prereqs_2'
 def dockerImageName = "${dockerRepository}:${dockerTag}"
-def targetHelixQueues = 'Redhat.72.Amd64+Ubuntu.1604.Amd64+Ubuntu.1604.Amd64'
+def targetHelixQueues = 'Redhat.72.Amd64+Debian.82.Amd64+Ubuntu.1404.Amd64+Ubuntu.1604.Amd64+Ubuntu.1610.Amd64+suse.421.amd64+fedora.25.amd64'
 def submittedHelixJson
 
 simpleDockerNode(dockerImageName) {
@@ -30,10 +30,10 @@ simpleDockerNode(dockerImageName) {
         sh "./build-managed.sh -- /t:GenerateVersionSourceFile /p:GenerateVersionSourceFile=true"
     }
     stage ('Sync') {
-        sh "./sync.sh -p -portableLinux -- /p:ArchGroup=x64"
+        sh "./sync.sh -p -portable -- /p:ArchGroup=x64"
     }
     stage ('Build Product') {
-        sh "./build.sh -buildArch=x64 -${configuration} -portableLinux"
+        sh "./build.sh -buildArch=x64 -${configuration} -portable"
     }
     stage ('Build Tests') {
         sh "./build-tests.sh -buildArch=x64 -${configuration} -SkipTests -- /p:ArchiveTests=true /p:EnableDumpling=true"
