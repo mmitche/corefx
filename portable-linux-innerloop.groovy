@@ -7,7 +7,8 @@
 @Library('dotnet-ci') _
 
 // Incoming parameters
-def configuration = Configuration;
+// Note that Configuration is also a class name, so to avoid confusion, we reference it through the "params" variable.
+def configuration = params.Configuration
 
 // Additional variables local to this pipeline
 def dockerRepository = 'microsoft/dotnet-buildtools-prereqs'
