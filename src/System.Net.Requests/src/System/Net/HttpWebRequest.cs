@@ -39,7 +39,7 @@ namespace System.Net
 
         private Task<HttpResponseMessage> _sendRequestTask;
 
-        private static int _defaultMaxResponseHeaderLength = HttpHandlerDefaults.DefaultMaxResponseHeaderLength;
+        private static int _defaultMaxResponseHeadersLength = HttpHandlerDefaults.DefaultMaxResponseHeadersLength;
 
         private int _beginGetRequestStreamCalled = 0;
         private int _beginGetResponseCalled = 0;
@@ -47,7 +47,7 @@ namespace System.Net
         private int _endGetResponseCalled = 0;
                 
         private int _maximumAllowedRedirections = HttpHandlerDefaults.DefaultMaxAutomaticRedirections;
-        private int _maximumResponseHeaderLen = _defaultMaxResponseHeaderLength;
+        private int _maximumResponseHeadersLen = _defaultMaxResponseHeadersLength;
         private ServicePoint _servicePoint;
         private int _timeout = WebRequest.DefaultTimeoutMilliseconds;
         private HttpContinueDelegate _continueDelegate;
@@ -138,23 +138,26 @@ namespace System.Net
         {
             get
             {
-                return _allowReadStreamBuffering;
+                return false;
             }
             set
             {
-                _allowReadStreamBuffering = value;
-            }
+                if (value)
+                {
+                    throw new InvalidOperationException(SR.net_OperationNotSupportedException);
+                }
+            }            
         }
-    
+
         public int MaximumResponseHeadersLength
         {
             get
             {
-                return _maximumResponseHeaderLen;
+                return _maximumResponseHeadersLen;
             }
             set
             {
-                _maximumResponseHeaderLen = value;
+                _maximumResponseHeadersLen = value;
             }
         }
                 
@@ -381,24 +384,7 @@ namespace System.Net
         }
 
 
-        public bool KeepAlive
-        {
-            get
-            {
-                return _webHeaderCollection[HttpKnownHeaderNames.KeepAlive] == bool.TrueString;
-            }
-            set
-            {
-                if (value)
-                {
-                    SetSpecialHeaders(HttpKnownHeaderNames.KeepAlive, bool.TrueString);
-                }
-                else
-                {
-                    SetSpecialHeaders(HttpKnownHeaderNames.KeepAlive, bool.FalseString);
-                }
-            }
-        } 
+        public bool KeepAlive { get; set; } = true;
 
         public bool UnsafeAuthenticatedConnectionSharing
         {
@@ -621,11 +607,11 @@ namespace System.Net
         {
             get
             {
-                return _defaultMaxResponseHeaderLength;
+                return _defaultMaxResponseHeadersLength;
             }
             set
             {
-                _defaultMaxResponseHeaderLength = value;
+                _defaultMaxResponseHeadersLength = value;
             }
         }
 
@@ -1184,6 +1170,15 @@ namespace System.Net
                 }
 
                 request.Headers.TransferEncodingChunked = SendChunked;
+
+                if (KeepAlive)
+                {
+                    request.Headers.Connection.Add(HttpKnownHeaderNames.KeepAlive);
+                }
+                else
+                {
+                    request.Headers.ConnectionClose = true;
+                }
 
                 _sendRequestTask = client.SendAsync(
                     request,
