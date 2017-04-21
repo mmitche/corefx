@@ -49,6 +49,7 @@ simpleDockerNode(dockerImageName) {
 
         // Read the json in
         submittedHelixJson = readJSON file: 'bin/SubmittedHelixRuns.txt'
+        archiveArtifacts 'bin/SubmittedHelixRuns.txt'
     }
 
     stage ('Execute Tests') {
