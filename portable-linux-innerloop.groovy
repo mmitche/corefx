@@ -17,6 +17,8 @@ def dockerImageName = "${dockerRepository}:${dockerTag}"
 def targetHelixQueues = 'Redhat.72.Amd64+Debian.82.Amd64+Ubuntu.1404.Amd64+Ubuntu.1604.Amd64+Ubuntu.1610.Amd64+suse.421.amd64+fedora.25.amd64'
 def submittedHelixJson
 
+// We need to determine if it's a PR or not, so we can pull in the target branch, pr id if applicable, commit, etc.
+
 simpleDockerNode(dockerImageName) {
     stage ('Checkout source') {
         checkout scm
@@ -41,10 +43,11 @@ simpleDockerNode(dockerImageName) {
     stage ('Submit To Helix For Testing') {
         // Bind the credentials
         withCredentials([string(credentialsId: 'CloudDropAccessToken', variable: 'CloudDropAccessToken'),
-                            string(credentialsId: 'OutputCloudResultsAccessToken', variable: 'OutputCloudResultsAccessToken'),
-                            string(credentialsId: 'HelixApiAccessKey', variable: 'HelixApiAccessKey')]) {
+                            string(credentialsId: 'OutputCloudResultsAccessToken', variable: 'OutputCloudResultsAccessToken')]) {
             // The hash and other items should be generic enough to allow for PR and non PR.
-            sh "./Tools/msbuild.sh src/upload-tests.proj /p:ArchGroup=x64 /p:ConfigurationGroup=${configuration} /p:EnableCloudTest=true /p:TestProduct=corefx /p:TimeoutInSeconds=1200 /p:TargetOS=Linux /p:CloudDropAccountName=dotnetbuilddrops /p:CloudResultsAccountName=dotnetjobresults /p:CloudDropAccessToken=\$CloudDropAccessToken /p:CloudResultsAccessToken=\$OutputCloudResultsAccessToken /p:HelixApiAccessKey=\$HelixApiAccessKey /p:HelixApiEndpoint=https://helix.dot.net/api/2016-06-28/jobs /p:Branch=${ghprbPullId} /p:TargetQueues=${targetHelixQueues} /p:HelixLogFolder=${WORKSPACE}/bin/ /p:HelixCorrelationInfoFileName=SubmittedHelixRuns.txt /p:Build=${ghprbActualCommit}"
+            sh 'env'
+
+            sh "./Tools/msbuild.sh src/upload-tests.proj /p:ArchGroup=x64 /p:ConfigurationGroup=${configuration} /p:TestProduct=corefx /p:TimeoutInSeconds=1200 /p:TargetOS=Linux /p:HelixJobType=test/functional/portable/cli/ /p:CloudDropAccountName=dotnetbuilddrops /p:CloudResultsAccountName=dotnetjobresults /p:CloudDropAccessToken=\$CloudDropAccessToken /p:CloudResultsAccessToken=\$OutputCloudResultsAccessToken /p:HelixApiEndpoint=https://helix.dot.net/api/2017-04-14/jobs /p:TargetQueues=${targetHelixQueues} /p:HelixLogFolder=${WORKSPACE}/bin/ /p:HelixCorrelationInfoFileName=SubmittedHelixRuns.txt",
         }
 
         // Read the json in
