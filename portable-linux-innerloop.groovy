@@ -38,7 +38,7 @@ simpleDockerNode(dockerImageName) {
         sh "./build.sh -buildArch=x64 -${configuration} -portable"
     }
     stage ('Build Tests') {
-        sh "./build-tests.sh -buildArch=x64 -${configuration} -SkipTests -- /p:ArchiveTests=true /p:EnableDumpling=true"
+        sh "./build-tests.sh -buildArch=x64 -${configuration} -SkipTests -Outerloop -- /p:ArchiveTests=true /p:EnableDumpling=true"
     }
     stage ('Submit To Helix For Testing') {
         // Bind the credentials
