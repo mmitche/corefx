@@ -622,7 +622,7 @@ namespace System.Net.Http
             private void ActivateNewRequest(EasyRequest easy)
             {
                 Debug.Assert(easy != null, "We should never get a null request");
-                Debug.Assert(easy._associatedMultiAgent == null, "New requests should not be associated with an agent yet");
+                Debug.Assert(easy._associatedMultiAgent == this, "Request should be associated with this agent");
 
                 // If cancellation has been requested, complete the request proactively
                 if (easy._cancellationToken.IsCancellationRequested)
@@ -654,7 +654,6 @@ namespace System.Net.Http
                 {
                     easy.InitializeCurl();
 
-                    easy._associatedMultiAgent = this;
                     easy.SetCurlOption(Interop.Http.CURLoption.CURLOPT_PRIVATE, gcHandlePtr);
                     easy.SetCurlCallbacks(gcHandlePtr, s_receiveHeadersCallback, s_sendCallback, s_seekCallback, s_receiveBodyCallback, s_debugCallback);
 
@@ -936,8 +935,9 @@ namespace System.Net.Http
                         CurlResponseHeaderReader reader = new CurlResponseHeaderReader(buffer, size);
 
                         // Validate that we haven't received too much header data.
+                        // MaxResponseHeadersLength property is in units in K (1024) bytes.
                         ulong headerBytesReceived = response._headerBytesReceived + size;
-                        if (headerBytesReceived > (ulong)easy._handler.MaxResponseHeadersLength)
+                        if (headerBytesReceived > (ulong)(easy._handler.MaxResponseHeadersLength * 1024))
                         {
                             throw new HttpRequestException(
                                 SR.Format(SR.net_http_response_headers_exceeded_length, easy._handler.MaxResponseHeadersLength));

@@ -2080,6 +2080,8 @@ namespace System
         public string Remove(int startIndex, int count) { throw null; }
         public string Replace(char oldChar, char newChar) { throw null; }
         public string Replace(string oldValue, string newValue) { throw null; }
+        public string Replace(string oldValue, string newValue, System.StringComparison comparisonType) { throw null; }
+        public string Replace(string oldValue, string newValue, bool ignoreCase, System.Globalization.CultureInfo culture) { throw null; }
         public string[] Split(char separator, System.StringSplitOptions options = System.StringSplitOptions.None) { throw null; }
         public string[] Split(char separator, int count, System.StringSplitOptions options = System.StringSplitOptions.None) { throw null; }
         public string[] Split(string separator, System.StringSplitOptions options = System.StringSplitOptions.None) { throw null; }
@@ -6486,7 +6488,16 @@ namespace System.Runtime.CompilerServices
         Default = 0,
         Sometimes = 2,
     }
-    
+    public static class RuntimeFeature
+    {
+        public static bool IsSupported(string feature) { throw null; }
+    }
+    [System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+    [AttributeUsage(AttributeTargets.All, Inherited = false)]
+    public sealed class IsReadOnlyAttribute : Attribute
+    {
+        public IsReadOnlyAttribute() { }
+    }
     public sealed partial class RuntimeWrappedException : System.Exception
     {
         internal RuntimeWrappedException() { }
@@ -7322,6 +7333,7 @@ namespace System.Threading.Tasks
         public int Id { get { throw null; } }
         public bool IsCanceled { get { throw null; } }
         public bool IsCompleted { get { throw null; } }
+        public bool IsCompletedSuccessfully { get { throw null; } }
         public bool IsFaulted { get { throw null; } }
         public System.Threading.Tasks.TaskStatus Status { get { throw null; } }
         System.Threading.WaitHandle System.IAsyncResult.AsyncWaitHandle { get { throw null; } }
