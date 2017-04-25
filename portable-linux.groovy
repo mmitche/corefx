@@ -8,7 +8,8 @@
 
 // Incoming parameters
 // Config - Build configuration. Note that we don't using 'Configuration' since it's used
-// in the build scripts and this can cause problems.
+//          in the build scripts and this can cause problems.
+// Outerloop - If true, runs outerloop, if false runs just innerloop
 
 // Additional variables local to this pipeline
 def dockerRepository = 'microsoft/dotnet-buildtools-prereqs'
@@ -35,21 +36,27 @@ simpleDockerNode(dockerImageName) {
         sh "./sync.sh -p -portable -- /p:ArchGroup=x64"
     }
     stage ('Build Product') {
-        sh "./build.sh -buildArch=x64 -${BuildConfig} -portable"
+        sh "./build.sh -buildArch=x64 -${Config} -portable"
     }
     stage ('Build Tests') {
-        sh "./build-tests.sh -buildArch=x64 -${BuildConfig} -SkipTests -Outerloop -- /p:ArchiveTests=true /p:EnableDumpling=true"
+        def additionalArgs = ''
+        if (Outerloop) {
+            additionalArgs = '-Outerloop'
+        }
+        sh "./build-tests.sh -buildArch=x64 -${Config} -SkipTests ${additionalArgs} -- /p:ArchiveTests=true /p:EnableDumpling=true"
     }
     stage ('Submit To Helix For Testing') {
         // Bind the credentials
         withCredentials([string(credentialsId: 'CloudDropAccessToken', variable: 'CloudDropAccessToken'),
                             string(credentialsId: 'OutputCloudResultsAccessToken', variable: 'OutputCloudResultsAccessToken')]) {
-            // The hash and other items should be generic enough to allow for PR and non PR.
-            sh 'env'
-
             /*sh "./Tools/msbuild.sh src/upload-tests.proj /p:ArchGroup=x64 /p:ConfigurationGroup=${configuration} /p:EnableCloudTest=true /p:TestProduct=corefx /p:TimeoutInSeconds=1200 /p:TargetOS=Linux /p:CloudDropAccountName=dotnetbuilddrops /p:CloudResultsAccountName=dotnetjobresults /p:CloudDropAccessToken=\$CloudDropAccessToken /p:CloudResultsAccessToken=\$OutputCloudResultsAccessToken /p:HelixApiAccessKey=\$HelixApiAccessKey /p:HelixApiEndpoint=https://helix.dot.net/api/2016-06-28/jobs /p:Branch=${ghprbPullId} /p:TargetQueues=${targetHelixQueues} /p:HelixLogFolder=${WORKSPACE}/bin/ /p:HelixCorrelationInfoFileName=SubmittedHelixRuns.txt /p:Build=${ghprbActualCommit}"*/
 
-            sh "./Tools/msbuild.sh src/upload-tests.proj /p:ArchGroup=x64 /p:ConfigurationGroup=${BuildConfig} /p:TestProduct=corefx /p:TimeoutInSeconds=1200 /p:TargetOS=Linux /p:HelixJobType=test/functional/portable/cli/ /p:CloudDropAccountName=dotnetbuilddrops /p:CloudResultsAccountName=dotnetjobresults /p:CloudDropAccessToken=\$CloudDropAccessToken /p:CloudResultsAccessToken=\$OutputCloudResultsAccessToken /p:HelixApiEndpoint=https://helix.int-dot.net/api/2017-04-14/jobs /p:TargetQueues=${targetHelixQueues} /p:HelixLogFolder=${WORKSPACE}/bin/ /p:HelixCorrelationInfoFileName=SubmittedHelixRuns.txt"
+            // Ask the CI SDK for a Helix source that makes sense.  This ensures that this pipeline works for both PR and non-PR cases
+            def helixSource = getHelixSource()
+            // Ask the CI SDK for a Build that makes sense.  We currently use the hash for the build
+            def helixBuild = getCommit()
+
+            sh "./Tools/msbuild.sh src/upload-tests.proj /p:ArchGroup=x64 /p:ConfigurationGroup=${Config} /p:TestProduct=corefx /p:TimeoutInSeconds=1200 /p:TargetOS=Linux /p:HelixJobType=test/functional/portable/cli/ /p:HelixSource=${helixSource} /p:Build=${helixBuild} /p:CloudDropAccountName=dotnetbuilddrops /p:CloudResultsAccountName=dotnetjobresults /p:CloudDropAccessToken=\$CloudDropAccessToken /p:CloudResultsAccessToken=\$OutputCloudResultsAccessToken /p:HelixApiEndpoint=https://helix.int-dot.net/api/2017-04-14/jobs /p:TargetQueues=${targetHelixQueues} /p:HelixLogFolder=${WORKSPACE}/bin/ /p:HelixCorrelationInfoFileName=SubmittedHelixRuns.txt"
         }
 
         // Read the json in
@@ -58,6 +65,6 @@ simpleDockerNode(dockerImageName) {
     }
 
     stage ('Execute Tests') {
-        waitForHelixRuns(submittedHelixJson, "Portable Linux ${BuildConfig}")
+        waitForHelixRuns(submittedHelixJson, "Portable Linux Tests - ${Config}")
     }
 }
