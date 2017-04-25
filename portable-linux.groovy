@@ -8,7 +8,8 @@
 
 // Incoming parameters
 // Config - Build configuration. Note that we don't using 'Configuration' since it's used
-// in the build scripts and this can cause problems.
+//          in the build scripts and this can cause problems.
+// Outerloop - If true, runs outerloop, if false runs just innerloop
 
 // Additional variables local to this pipeline
 def dockerRepository = 'microsoft/dotnet-buildtools-prereqs'
@@ -38,7 +39,11 @@ simpleDockerNode(dockerImageName) {
         sh "./build.sh -buildArch=x64 -${Config} -portable"
     }
     stage ('Build Tests') {
-        sh "./build-tests.sh -buildArch=x64 -${Config} -SkipTests -Outerloop -- /p:ArchiveTests=true /p:EnableDumpling=true"
+        def additionalArgs = ''
+        if (Outerloop) {
+            additionalArgs = '-Outerloop'
+        }
+        sh "./build-tests.sh -buildArch=x64 -${Config} -SkipTests ${additionalArgs} -- /p:ArchiveTests=true /p:EnableDumpling=true"
     }
     stage ('Submit To Helix For Testing') {
         // Bind the credentials
