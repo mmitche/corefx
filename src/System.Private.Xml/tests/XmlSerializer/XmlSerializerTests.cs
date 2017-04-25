@@ -1659,6 +1659,18 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    public static void Xml_TypeWithDefaultTimeSpanProperty()
+    {
+        var obj = new TypeWithDefaultTimeSpanProperty { TimeSpanProperty2 = new TimeSpan(0, 1, 0) };
+        var deserializedObj = SerializeAndDeserialize(obj,
+@"<?xml version=""1.0""?>
+<TypeWithDefaultTimeSpanProperty xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema""><TimeSpanProperty2>PT1M</TimeSpanProperty2></TypeWithDefaultTimeSpanProperty>");
+        Assert.NotNull(deserializedObj);
+        Assert.Equal(obj.TimeSpanProperty, deserializedObj.TimeSpanProperty);
+        Assert.Equal(obj.TimeSpanProperty2, deserializedObj.TimeSpanProperty2);
+    }
+
+    [Fact]
     public static void Xml_TypeWithByteProperty()
     {
         var obj = new TypeWithByteProperty() {ByteProperty = 123};
@@ -3224,10 +3236,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
         Assert.Equal(requestBodyValue.composite.BoolValue, requestBodyActual.composite.BoolValue);
         Assert.Equal(requestBodyValue.composite.StringValue, requestBodyActual.composite.StringValue);
     }
-    
-#if ReflectionOnly
-    [ActiveIssue(18076)]
-#endif
+
     [Fact]
     public static void Xml_HiddenDerivedFieldTest()
     {
