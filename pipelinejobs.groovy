@@ -17,8 +17,10 @@ newPipeline = Pipeline.createPipelineForGithub(this, project, branch, 'portable-
 ['netcoreapp'].each { targetGroup ->
 	['Debug', 'Release'].each { configurationGroup ->
 		['PortableLinux'].each { osName ->
-			newPipeline.triggerPipelineOnEveryGithubPR("${osName} ${configurationGroup}", ['Configuration':configurationGroup])
-			newPipeline.triggerPipelineOnGithubPush(['Configuration':configurationGroup])
+            // Avoid running into issues where Configuration set in the environment affects the build (though
+            // these are usually build bugs).  Instead use BuildConfig as the parameter name.
+			newPipeline.triggerPipelineOnEveryGithubPR("${osName} ${configurationGroup}", ['BuildConfig':configurationGroup])
+			newPipeline.triggerPipelineOnGithubPush(['BuildConfig':configurationGroup])
 		}
 	}
 }
