@@ -7,8 +7,8 @@
 @Library('dotnet-ci') _
 
 // Incoming parameters
-// BuildConfig - Build configuration.  We don't use 'Configuration'' as the parameter name
-// since that is set in the environment and could affect the build itself (which uses 'Configuration' internally)
+// Config - Build configuration. Note that we don't using 'Configuration' since it's used
+// in the build scripts and this can cause problems.
 
 // Additional variables local to this pipeline
 def dockerRepository = 'microsoft/dotnet-buildtools-prereqs'
