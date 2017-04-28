@@ -10,7 +10,9 @@ namespace System.Security.Cryptography.Rsa.Tests
 {
     public partial class ImportExport
     {
-        [Fact]
+        private static bool EphemeralKeysAreExportable => !PlatformDetection.IsFullFramework || PlatformDetection.IsNetfx462OrNewer();
+
+        [ConditionalFact(nameof(EphemeralKeysAreExportable))]
         public static void ExportAutoKey()
         {
             RSAParameters privateParams;
@@ -265,6 +267,9 @@ namespace System.Security.Cryptography.Rsa.Tests
         }
 
         [Fact]
+#if TESTING_CNG_IMPLEMENTATION
+        [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "https://github.com/dotnet/corefx/issues/18882")]
+#endif
         public static void ImportNoDP()
         {
             // Because RSAParameters is a struct, this is a copy,

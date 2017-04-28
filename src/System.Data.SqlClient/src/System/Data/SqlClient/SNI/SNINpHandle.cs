@@ -46,7 +46,11 @@ namespace System.Data.SqlClient.SNI
 
             try
             {
-                _pipeStream = new NamedPipeClientStream(serverName, pipeName, PipeDirection.InOut, PipeOptions.WriteThrough, Security.Principal.TokenImpersonationLevel.None);
+                _pipeStream = new NamedPipeClientStream(
+                    serverName,
+                    pipeName,
+                    PipeDirection.InOut,
+                    PipeOptions.Asynchronous | PipeOptions.WriteThrough);
 
                 bool isInfiniteTimeOut = long.MaxValue == timerExpire;
                 if (isInfiniteTimeOut)
@@ -137,6 +141,9 @@ namespace System.Data.SqlClient.SNI
                     _pipeStream.Dispose();
                     _pipeStream = null;
                 }
+
+                //Release any references held by _stream.
+                _stream = null;
             }
         }
 

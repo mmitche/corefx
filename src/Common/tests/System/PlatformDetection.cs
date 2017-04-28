@@ -19,6 +19,7 @@ namespace System
         //
 
         public static bool IsFullFramework => RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase);
+        public static bool IsNetNative => RuntimeInformation.FrameworkDescription.StartsWith(".NET Native", StringComparison.OrdinalIgnoreCase);
 
         public static bool IsWindows => RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
         public static bool IsWindows7 => IsWindows && GetWindowsVersion() == 6 && GetWindowsMinorVersion() == 1;
@@ -41,6 +42,39 @@ namespace System
             File.Exists(Path.Combine(Environment.GetEnvironmentVariable("windir"), "System32", "httpapi.dll")));
 
         public static int WindowsVersion => GetWindowsVersion();
+
+        public static bool IsNetfx462OrNewer()
+        {
+            if (!IsFullFramework)
+            {
+                return false;
+            }
+
+            Version net462 = new Version(4, 6, 2);
+            Version runningVersion = GetFrameworkVersion();
+            return runningVersion != null && runningVersion >= net462;
+        }
+
+        public static Version GetFrameworkVersion()
+        {
+            string[] descriptionArray = RuntimeInformation.FrameworkDescription.Split(' ');
+            if (descriptionArray.Length < 3)
+            {
+                return null;
+            }
+                
+            string runningVersion = descriptionArray[2];
+
+            // we could get a version with build number > 1 e.g 4.6.1375 but we only want to have 4.6.1
+            // so that we get the actual Framework Version
+            if (runningVersion.Length > 5)
+            {
+                runningVersion = runningVersion.Substring(0, 5);
+            }
+
+            Version result;
+            return Version.TryParse(runningVersion, out result) ? result : null;
+        }
 
         private static int s_isWinRT = -1;
 
