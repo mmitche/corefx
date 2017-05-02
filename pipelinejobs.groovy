@@ -18,7 +18,7 @@ def linuxPipeline = Pipeline.createPipelineForGithub(this, project, branch, 'por
 	['Debug', 'Release'].each { configurationGroup ->
 		['Linux x64'].each { osName ->
             def parameters = ['Config':configurationGroup, 'OuterLoop':false]
-			linuxPipeline.triggerPipelineOnEveryGithubPR("${osName} ${configurationGroup}", parameters)
+            linuxPipeline.triggerPipelineOnEveryGithubPR("${osName} ${configurationGroup}", parameters)
             linuxPipeline.triggerPipelineOnGithubPush(parameters)
 		}
 	}
@@ -30,7 +30,7 @@ def windowsPipeline = Pipeline.createPipelineForGithub(this, project, branch, 'p
 	['Debug', 'Release'].each { configurationGroup ->
 		['Windows x64'].each { osName ->
             def parameters = ['Config':configurationGroup, 'OuterLoop':false]
-			windowsPipeline.triggerPipelineOnEveryGithubPR("${osName} ${configurationGroup}", ['Config':configurationGroup, 'OuterLoop':false])
+            windowsPipeline.triggerPipelineOnEveryGithubPR("${osName} ${configurationGroup}", ['Config':configurationGroup, 'OuterLoop':false])
             windowsPipeline.triggerPipelineOnGithubPush(parameters)
 		}
 	}
