@@ -12,15 +12,26 @@ def branch = GithubBranchName
 // Define innerloop testing.  These jobs run on every merge and a subset of them run on every PR, the ones
 // that don't run per PR can be requested via a magic phrase.
 // **************************
-newPipeline = Pipeline.createPipelineForGithub(this, project, branch, 'portable-linux.groovy')
+def linuxPipeline = Pipeline.createPipelineForGithub(this, project, branch, 'portable-linux.groovy')
 
 ['netcoreapp'].each { targetGroup ->
 	['Debug', 'Release'].each { configurationGroup ->
-		['PortableLinux'].each { osName ->
-            // Avoid running into issues where Configuration set in the environment affects the build (though
-            // these are usually build bugs).  Instead use BuildConfig as the parameter name.
-			newPipeline.triggerPipelineOnEveryGithubPR("${osName} ${configurationGroup}", ['Config':configurationGroup, 'OuterLoop':false])
-			newPipeline.triggerPipelineOnGithubPush(['Config':configurationGroup, 'OuterLoop':false])
+		['Linux x64'].each { osName ->
+            // Avoid running into issues where 'Configuration' set in the environment affects the build (though
+            // these are usually build bugs).  Instead use Config as the parameter name.
+			linuxPipeline.triggerPipelineOnEveryGithubPR("${osName} ${configurationGroup}", ['Config':configurationGroup, 'OuterLoop':false])
+		}
+	}
+}
+
+// Create a pipeline for portable windows
+def windowsPipeline = Pipeline.createPipelineForGithub(this, project, branch, 'portable-windows.groovy')
+['netcoreapp'].each { targetGroup ->
+	['Debug', 'Release'].each { configurationGroup ->
+		['Windows x64'].each { osName ->
+            // Avoid running into issues where 'Configuration' set in the environment affects the build (though
+            // these are usually build bugs).  Instead use Config as the parameter name.
+			windowsPipeline.triggerPipelineOnEveryGithubPR("${osName} ${configurationGroup}", ['Config':configurationGroup, 'OuterLoop':false])
 		}
 	}
 }
