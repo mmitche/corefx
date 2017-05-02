@@ -73,7 +73,7 @@ namespace SerializationTestTypes
     }
 
 
-    [DataContract(Namespace = "http://Microsoft.ServiceModel.Samples")]
+    [DataContract(Namespace = "NonExistNamespace")]
     public class Employee
     {
         [DataMember]
@@ -132,5 +132,39 @@ namespace SerializationTestTypes
         public Beta beta = new Beta();
         [DataMember]
         public Charlie charlie2 = new Charlie();
+    }
+
+    [DataContract]
+    public class DCRVariations
+    {
+        [DataMember]
+        public object unknownType1;
+
+        [DataMember]
+        public object unknownType2;
+    }
+
+    [DataContract]
+    public class CustomClass
+    {
+        [DataMember()]
+        private object[] knownTypes;
+
+        [DataMember()]
+        private object[] dataContractResolverTypes;
+
+        [DataMember()]
+        public virtual object[] KnownTypes
+        {
+            get { return knownTypes; }
+            set { knownTypes = value; }
+        }
+
+        [DataMember()]
+        public virtual object[] DataContractResolverTypes
+        {
+            get { return dataContractResolverTypes; }
+            set { dataContractResolverTypes = value; }
+        }
     }
 }

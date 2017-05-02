@@ -139,11 +139,14 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
             Value = new DateTime(549269870000L, DateTimeKind.Utc)
         };
 
-        TypeWithDateTimePropertyAsXmlTime utcTimeRoundTrip = SerializeAndDeserialize(utcTimeOjbect,
-@"<?xml version=""1.0"" encoding=""utf-8""?>
+        if (!PlatformDetection.IsFullFramework || PlatformDetection.IsNetfx462OrNewer())
+        {
+            TypeWithDateTimePropertyAsXmlTime utcTimeRoundTrip = SerializeAndDeserialize(utcTimeOjbect,
+    @"<?xml version=""1.0"" encoding=""utf-8""?>
 <TypeWithDateTimePropertyAsXmlTime xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"">15:15:26.9870000Z</TypeWithDateTimePropertyAsXmlTime>");
 
-        Assert.StrictEqual(utcTimeOjbect.Value, utcTimeRoundTrip.Value);
+            Assert.StrictEqual(utcTimeOjbect.Value, utcTimeRoundTrip.Value);
+        }
     }
 
     [Fact]
@@ -1991,6 +1994,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void Xml_Soap_TypeWithEnumFlagPropertyHavingDefaultValue()
     {
         var mapping = new SoapReflectionImporter().ImportTypeMapping(typeof(TypeWithEnumFlagPropertyHavingDefaultValue));
@@ -2031,6 +2035,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void Xml_Soap_TypeWithXmlQualifiedName()
     {
         var mapping = new SoapReflectionImporter().ImportTypeMapping(typeof(TypeWithXmlQualifiedName));
@@ -2570,6 +2575,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void  SoapAttributeTests()
     {
         SoapAttributes soapAttrs = new SoapAttributes();
@@ -2580,6 +2586,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void Xml_Soap_ComplexField()
     {
         XmlTypeMapping typeMapping = new SoapReflectionImporter().ImportTypeMapping(typeof(SoapEncodedTestType2));
@@ -2595,6 +2602,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void Xml_Soap_Basic()
     {
         XmlTypeMapping myTypeMapping = new SoapReflectionImporter().ImportTypeMapping(typeof(SoapEncodedTestType1));
@@ -2620,6 +2628,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void Xml_Soap_TypeWithNullableFields()
     {
         XmlTypeMapping myTypeMapping = new SoapReflectionImporter().ImportTypeMapping(typeof(SoapEncodedTestType4));
@@ -2656,6 +2665,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void Xml_Soap_Nullable()
     {
         XmlTypeMapping intMapping = new SoapReflectionImporter().ImportTypeMapping(typeof(int?));
@@ -2688,6 +2698,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void Xml_Soap_Basic_FromMappings()
     {
         XmlTypeMapping myTypeMapping = new SoapReflectionImporter().ImportTypeMapping(typeof(SoapEncodedTestType1));
@@ -2713,6 +2724,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void Xml_Soap_With_SoapIgnore()
     {
         var soapAttributes = new SoapAttributes();
@@ -2744,6 +2756,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void Xml_Soap_With_SoapElement()
     {
         var soapAttributes = new SoapAttributes();
@@ -2776,6 +2789,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void Xml_Soap_With_SoapType()
     {
         var soapAttributes = new SoapAttributes();
@@ -2809,6 +2823,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void Xml_Soap_Enum()
     {
         XmlTypeMapping myTypeMapping = new SoapReflectionImporter().ImportTypeMapping(typeof(SoapEncodedTestEnum));
@@ -2824,6 +2839,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void Xml_Soap_Enum_With_SoapEnumOverrides()
     {
         var soapAtts = new SoapAttributes();
@@ -2848,6 +2864,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void SoapEncodedSerialization_SoapAttribute()
     {
         var soapAtts1 = new SoapAttributes();
@@ -2882,6 +2899,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void SoapEncodedSerialization_IncludeType()
     {
         var soapImporter = new SoapReflectionImporter();
@@ -2908,6 +2926,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void SoapEncodedSerialization_CircularLink()
     {
         XmlTypeMapping myTypeMapping = new SoapReflectionImporter().ImportTypeMapping(typeof(MyCircularLink));
@@ -2923,6 +2942,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void Xml_Soap_Array()
     {
         XmlTypeMapping myTypeMapping = new SoapReflectionImporter().ImportTypeMapping(typeof(MyGroup));
@@ -2945,6 +2965,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void Xml_Soap_List()
     {
         XmlTypeMapping myTypeMapping = new SoapReflectionImporter().ImportTypeMapping(typeof(MyGroup2));
@@ -2968,6 +2989,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void Xml_Soap_MyCollection()
     {
         XmlTypeMapping myTypeMapping = new SoapReflectionImporter().ImportTypeMapping(typeof(MyCollection<string>));
@@ -3002,6 +3024,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void Xml_Soap_WithNullables()
     {
         var mapping = new SoapReflectionImporter().ImportTypeMapping(typeof(WithNullables));
@@ -3021,6 +3044,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void Xml_Soap_Enums()
     {
         var mapping = new SoapReflectionImporter().ImportTypeMapping(typeof(WithEnums));
@@ -3035,12 +3059,14 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void Xml_Soap_Dictionary()
     {
         Assert.Throws<NotSupportedException>(() => { new SoapReflectionImporter().ImportTypeMapping(typeof(MyGroup3)); });
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void Xml_Soap_NestedPublicType()
     {
         XmlTypeMapping myTypeMapping = new SoapReflectionImporter().ImportTypeMapping(typeof(TypeWithNestedPublicType.LevelData));
@@ -3055,6 +3081,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void Xml_Soap_ObjectAsRoot()
     {
         XmlTypeMapping myTypeMapping = new SoapReflectionImporter().ImportTypeMapping(typeof(object));
@@ -3089,6 +3116,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void Xml_Soap_ObjectAsRoot_Nullable()
     {
         XmlTypeMapping nullableTypeMapping = new SoapReflectionImporter().ImportTypeMapping(typeof(TypeWithNullableObject));
@@ -3178,6 +3206,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void SoapSchemaMemberTest()
     {
         string ns = "http://www.w3.org/2001/XMLSchema";
@@ -3960,6 +3989,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void XmlMembersMapping_Soap_SimpleType()
     {
         string memberName = "GetData";
@@ -4154,6 +4184,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void Xml_Soap_TypeWithMyCollectionField()
     {
         XmlTypeMapping myTypeMapping = new SoapReflectionImporter().ImportTypeMapping(typeof(TypeWithMyCollectionField));
@@ -4178,6 +4209,7 @@ string.Format(@"<?xml version=""1.0"" encoding=""utf-8""?>
     }
 
     [Fact]
+    [SkipOnTargetFramework(TargetFrameworkMonikers.NetFramework, "dotnet/corefx #18964")]
     public static void Xml_Soap_TypeWithReadOnlyMyCollectionProperty()
     {
         XmlTypeMapping myTypeMapping = new SoapReflectionImporter().ImportTypeMapping(typeof(TypeWithReadOnlyMyCollectionProperty));
