@@ -17,9 +17,9 @@ def linuxPipeline = Pipeline.createPipelineForGithub(this, project, branch, 'por
 ['netcoreapp'].each { targetGroup ->
 	['Debug', 'Release'].each { configurationGroup ->
 		['Linux x64'].each { osName ->
-            // Avoid running into issues where 'Configuration' set in the environment affects the build (though
-            // these are usually build bugs).  Instead use Config as the parameter name.
-			linuxPipeline.triggerPipelineOnEveryGithubPR("${osName} ${configurationGroup}", ['Config':configurationGroup, 'OuterLoop':false])
+            def parameters = ['Config':configurationGroup, 'OuterLoop':false]
+			linuxPipeline.triggerPipelineOnEveryGithubPR("${osName} ${configurationGroup}", parameters)
+            linuxPipeline.triggerPipelineOnGithubPush(parameters)
 		}
 	}
 }
@@ -29,9 +29,9 @@ def windowsPipeline = Pipeline.createPipelineForGithub(this, project, branch, 'p
 ['netcoreapp'].each { targetGroup ->
 	['Debug', 'Release'].each { configurationGroup ->
 		['Windows x64'].each { osName ->
-            // Avoid running into issues where 'Configuration' set in the environment affects the build (though
-            // these are usually build bugs).  Instead use Config as the parameter name.
+            def parameters = ['Config':configurationGroup, 'OuterLoop':false]
 			windowsPipeline.triggerPipelineOnEveryGithubPR("${osName} ${configurationGroup}", ['Config':configurationGroup, 'OuterLoop':false])
+            windowsPipeline.triggerPipelineOnGithubPush(parameters)
 		}
 	}
 }
