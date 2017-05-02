@@ -5,7 +5,7 @@
 //          in the build scripts and this can cause problems.
 // Outerloop - If true, runs outerloop, if false runs just innerloop
 
-simpleNode('Windows_2012','latest') {
+simpleNode('Windows_NT','latest') {
     stage ('Checkout source') {
         checkout scm
     }
