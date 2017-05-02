@@ -63,6 +63,6 @@ simpleDockerNode('microsoft/dotnet-buildtools-prereqs:rhel7_prereqs_2') {
 
     stage ('Execute Tests') {
         def submittedHelixJson = readJSON file: "${logFolder}SubmittedHelixRuns.txt"
-        waitForHelixRuns(submittedHelixJson, "Portable Linux Tests - ${Config}")
+        waitForHelixRuns(submittedHelixJson, "Linux x64 Tests - ${Config}")
     }
 }

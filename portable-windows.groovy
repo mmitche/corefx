@@ -5,10 +5,12 @@
 //          in the build scripts and this can cause problems.
 // Outerloop - If true, runs outerloop, if false runs just innerloop
 
-simpleDockerNode('microsoft/dotnet-buildtools-prereqs:rhel7_prereqs_2') {
+simpleNode('Windows_2012','latest') {
     stage ('Checkout source') {
         checkout scm
     }
+
+    def logFolder = getLogFolder()
 
     stage ('Clean') {
         bat '.\\clean.cmd -all'
@@ -37,26 +39,18 @@ simpleDockerNode('microsoft/dotnet-buildtools-prereqs:rhel7_prereqs_2') {
             def helixSource = getHelixSource()
             // Ask the CI SDK for a Build that makes sense.  We currently use the hash for the build
             def helixBuild = getCommit()
-            // Get the log folder where any helix logs should be stored (submission correlation id's, etc.)
-            def helixLogFolder = getLogFolder()
             // Get the user that should be associated with the submission
             def helixCreator = getUser()
             
             // Target queues
             def targetHelixQueues = 'Windows.10.Amd64.Open,Windows.7.Amd64.Open,Windows.81.Amd64.Open'
 
-            try {
-                bat "msbuild src\\upload-tests.proj /p:ArchGroup=x64 /p:ConfigurationGroup=${Config} /p:TestProduct=corefx /p:TimeoutInSeconds=1200 /p:TargetOS=Windows_NT /p:HelixJobType=test/functional/portable/cli/ /p:HelixSource=${helixSource} /p:Build=${helixBuild} /p:HelixCreator=${helixCreator} /p:CloudDropAccountName=dotnetbuilddrops /p:CloudResultsAccountName=dotnetjobresults /p:CloudDropAccessToken=\$CloudDropAccessToken /p:CloudResultsAccessToken=\$OutputCloudResultsAccessToken /p:HelixApiEndpoint=https://helix.int-dot.net/api/2017-04-14/jobs /p:TargetQueues=\"${targetHelixQueues}\" /p:HelixLogFolder=${helixLogFolder} /p:HelixCorrelationInfoFileName=SubmittedHelixRuns.txt"
-            }
-            catch (err) {
-                bat "dir ${helixLogFolder}"
-                throw err
-            }
+            bat "msbuild src\\upload-tests.proj /p:ArchGroup=x64 /p:ConfigurationGroup=${Config} /p:TestProduct=corefx /p:TimeoutInSeconds=1200 /p:TargetOS=Windows_NT /p:HelixJobType=test/functional/portable/cli/ /p:HelixSource=${helixSource} /p:Build=${helixBuild} /p:HelixCreator=${helixCreator} /p:CloudDropAccountName=dotnetbuilddrops /p:CloudResultsAccountName=dotnetjobresults /p:CloudDropAccessToken=\$CloudDropAccessToken /p:CloudResultsAccessToken=\$OutputCloudResultsAccessToken /p:HelixApiEndpoint=https://helix.int-dot.net/api/2017-04-14/jobs /p:TargetQueues=\"${targetHelixQueues}\" /p:HelixLogFolder=${logFolder} /p:HelixCorrelationInfoFileName=SubmittedHelixRuns.txt"
         }
     }
 
     stage ('Execute Tests') {
         def submittedHelixJson = readJSON file: 'bin/SubmittedHelixRuns.txt'
-        waitForHelixRuns(submittedHelixJson, "Portable Linux Tests - ${Config}")
+        waitForHelixRuns(submittedHelixJson, "Linux x64 Tests - ${Config}")
     }
 }
