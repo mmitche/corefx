@@ -1,9 +1,3 @@
-// Todo: Refactor library so that we could have:
-// standardNode('Ubuntu 16.04', 'latest') {
-//     ...
-// }
-// ... is wrapped by a try/finally that defines workspace cleanup
-
 @Library('dotnet-ci') _
 
 // Incoming parameters
@@ -11,22 +5,25 @@
 //          in the build scripts and this can cause problems.
 // Outerloop - If true, runs outerloop, if false runs just innerloop
 
-// Additional variables local to this pipeline
-def dockerRepository = 'microsoft/dotnet-buildtools-prereqs'
-def dockerTag = 'rhel7_prereqs_2'
-def dockerImageName = "${dockerRepository}:${dockerTag}"
-def targetHelixQueues = 'Redhat.72.Amd64+Debian.82.Amd64+Ubuntu.1404.Amd64+Ubuntu.1604.Amd64+Ubuntu.1610.Amd64+suse.421.amd64+fedora.25.amd64'
-def submittedHelixJson
-
-// We need to determine if it's a PR or not, so we can pull in the target branch, pr id if applicable, commit, etc.
-
-simpleDockerNode(dockerImageName) {
+simpleDockerNode('microsoft/dotnet-buildtools-prereqs:rhel7_prereqs_2') {
     stage ('Checkout source') {
         checkout scm
     }
+
+    def logFolder = getLogFolder()
+
     stage ('Initialize tools') {
-        // Init tools
-        sh './init-tools.sh'
+        try {
+            // Init tools
+            sh './init-tools.sh'
+        }
+        catch (err) {
+            // On errors for build tools initializations, it's useful to echo the contents of the file
+            // for easy diagnosis.  This could also be copied to the log directory
+            sh 'cat init-tools.log'
+            // Ensure the build result is still propagated.
+            throw err
+        }
     }
     stage ('Generate version assets') {
         // Generate the version assets.  Do we need to even do this for non-official builds?
@@ -48,23 +45,24 @@ simpleDockerNode(dockerImageName) {
     stage ('Submit To Helix For Testing') {
         // Bind the credentials
         withCredentials([string(credentialsId: 'CloudDropAccessToken', variable: 'CloudDropAccessToken'),
-                            string(credentialsId: 'OutputCloudResultsAccessToken', variable: 'OutputCloudResultsAccessToken')]) {
-            /*sh "./Tools/msbuild.sh src/upload-tests.proj /p:ArchGroup=x64 /p:ConfigurationGroup=${configuration} /p:EnableCloudTest=true /p:TestProduct=corefx /p:TimeoutInSeconds=1200 /p:TargetOS=Linux /p:CloudDropAccountName=dotnetbuilddrops /p:CloudResultsAccountName=dotnetjobresults /p:CloudDropAccessToken=\$CloudDropAccessToken /p:CloudResultsAccessToken=\$OutputCloudResultsAccessToken /p:HelixApiAccessKey=\$HelixApiAccessKey /p:HelixApiEndpoint=https://helix.dot.net/api/2016-06-28/jobs /p:Branch=${ghprbPullId} /p:TargetQueues=${targetHelixQueues} /p:HelixLogFolder=${WORKSPACE}/bin/ /p:HelixCorrelationInfoFileName=SubmittedHelixRuns.txt /p:Build=${ghprbActualCommit}"*/
-
+                         string(credentialsId: 'OutputCloudResultsAccessToken', variable: 'OutputCloudResultsAccessToken')]) {
             // Ask the CI SDK for a Helix source that makes sense.  This ensures that this pipeline works for both PR and non-PR cases
             def helixSource = getHelixSource()
             // Ask the CI SDK for a Build that makes sense.  We currently use the hash for the build
             def helixBuild = getCommit()
+            // Get the log folder where any helix logs should be stored (submission correlation id's, etc.)
+            def helixLogFolder = getLogFolder()
+            // Get the user that should be associated with the submission
+            def helixCreator = getUser()
+            // Target queues
+            def targetHelixQueues = 'Debian.8.Amd64.Open+Ubuntu.1404.Amd64.Open'
 
-            sh "./Tools/msbuild.sh src/upload-tests.proj /p:ArchGroup=x64 /p:ConfigurationGroup=${Config} /p:TestProduct=corefx /p:TimeoutInSeconds=1200 /p:TargetOS=Linux /p:HelixJobType=test/functional/portable/cli/ /p:HelixSource=${helixSource} /p:Build=${helixBuild} /p:CloudDropAccountName=dotnetbuilddrops /p:CloudResultsAccountName=dotnetjobresults /p:CloudDropAccessToken=\$CloudDropAccessToken /p:CloudResultsAccessToken=\$OutputCloudResultsAccessToken /p:HelixApiEndpoint=https://helix.int-dot.net/api/2017-04-14/jobs /p:TargetQueues=${targetHelixQueues} /p:HelixLogFolder=${WORKSPACE}/bin/ /p:HelixCorrelationInfoFileName=SubmittedHelixRuns.txt"
+            sh "./Tools/msbuild.sh src/upload-tests.proj /p:ArchGroup=x64 /p:ConfigurationGroup=${Config} /p:TestProduct=corefx /p:TimeoutInSeconds=1200 /p:TargetOS=Linux /p:HelixJobType=test/functional/portable/cli/ /p:HelixSource=${helixSource} /p:Build=${helixBuild} /p:HelixCreator=${helixCreator} /p:CloudDropAccountName=dotnetbuilddrops /p:CloudResultsAccountName=dotnetjobresults /p:CloudDropAccessToken=\$CloudDropAccessToken /p:CloudResultsAccessToken=\$OutputCloudResultsAccessToken /p:HelixApiEndpoint=https://helix.int-dot.net/api/2017-04-14/jobs /p:TargetQueues=${targetHelixQueues} /p:HelixLogFolder=${logFolder} /p:HelixCorrelationInfoFileName=SubmittedHelixRuns.txt"
         }
-
-        // Read the json in
-        submittedHelixJson = readJSON file: 'bin/SubmittedHelixRuns.txt'
-        archiveArtifacts 'bin/SubmittedHelixRuns.txt'
     }
 
     stage ('Execute Tests') {
-        waitForHelixRuns(submittedHelixJson, "Portable Linux Tests - ${Config}")
+        def submittedHelixJson = readJSON file: "${logFolder}SubmittedHelixRuns.txt"
+        waitForHelixRuns(submittedHelixJson, "Linux x64 Tests - ${Config}")
     }
 }
