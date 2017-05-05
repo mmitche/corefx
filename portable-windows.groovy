@@ -50,7 +50,7 @@ simpleNode('Windows_NT','latest') {
     }
 
     stage ('Execute Tests') {
-        def submittedHelixJson = readJSON file: 'bin/SubmittedHelixRuns.txt'
+        def submittedHelixJson = readJSON file: "${logFolder}/SubmittedHelixRuns.txt"
         waitForHelixRuns(submittedHelixJson, "Linux x64 Tests - ${Config}")
     }
 }
