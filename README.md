@@ -20,6 +20,7 @@ Great starting page: http://dotnet.github.io
   * [Install official releases](https://www.microsoft.com/net/core)
   * [Documentation](https://docs.microsoft.com/en-us/dotnet) (Get Started, Tutorials, Porting from .NET Framework, API reference, ...)
     * [Deploying apps](https://docs.microsoft.com/en-us/dotnet/articles/core/preview3/deploying)
+  * [Supported OS versions](https://github.com/dotnet/core/blob/master/roadmap.md#technology-roadmaps)
 * [Roadmap](https://github.com/dotnet/core/blob/master/roadmap.md)
 * [Releases](https://github.com/dotnet/core/tree/master/release-notes)
 * [Bringing more APIs to .NET Core](https://github.com/dotnet/corefx/blob/master/Documentation/project-docs/porting.md) (and why some APIs will be left out)
@@ -60,14 +61,9 @@ to clarify expected behavior in our community. For more information, see the [.N
 
 ### Reporting security issues and security bugs
 
-Security issues and bugs should be reported privately, via email, to the
-Microsoft Security Response Center (MSRC) <secure@microsoft.com>. You should
-receive a response within 24 hours. If for some reason you do not, please follow
-up via email to ensure we received your original message. Further information,
-including the MSRC PGP key, can be found in the
-[Security TechCenter](https://technet.microsoft.com/en-us/security/ff852094.aspx).
+Security issues and bugs should be reported privately, via email, to the Microsoft Security Response Center (MSRC) <secure@microsoft.com>. You should receive a response within 24 hours. If for some reason you do not, please follow up via email to ensure we received your original message. Further information, including the MSRC PGP key, can be found in the [Security TechCenter](https://technet.microsoft.com/en-us/security/ff852094.aspx).
 
-
+Also see info about related [Microsoft .NET Core and ASP.NET Core Bug Bounty Program](https://technet.microsoft.com/en-us/mt764065.aspx).
 
 ## License
 
@@ -94,6 +90,8 @@ Daily builds of .NET Core components are published to [dotnet-core MyGet gallery
 The latest version number of each library can be seen in that gallery.
 
 ### Build & Test Status
+
+Note: See officially supported [OS versions](https://github.com/dotnet/core/blob/master/roadmap.md#technology-roadmaps).
 
 |    | Inner x64 Debug | Inner x64 Release | Outer x64 Debug | Outer x64 Release |
 |:---|----------------:|------------------:|----------------:|------------------:|
