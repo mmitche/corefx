@@ -31,7 +31,7 @@ simpleNode('Windows_NT','latest') {
         }
         bat ".\\build-tests.cmd -buildArch=x64 -${Config} -SkipTests -portable ${additionalArgs} -- /p:RuntimeOS=win10 /p:ArchiveTests=true"
     }
-    /*stage ('Submit To Helix For Testing') {
+    stage ('Submit To Helix For Testing') {
         // Bind the credentials
         withCredentials([string(credentialsId: 'CloudDropAccessToken', variable: 'CloudDropAccessToken'),
                          string(credentialsId: 'OutputCloudResultsAccessToken', variable: 'OutputCloudResultsAccessToken')]) {
@@ -52,5 +52,5 @@ simpleNode('Windows_NT','latest') {
     stage ('Execute Tests') {
         def submittedHelixJson = readJSON file: "${logFolder}/SubmittedHelixRuns.txt"
         waitForHelixRuns(submittedHelixJson, "Windows x64 Tests - ${Config}")
-    }*/
+    }
 }
