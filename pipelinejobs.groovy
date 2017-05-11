@@ -18,7 +18,7 @@ def linuxPipeline = Pipeline.createPipelineForGithub(this, project, branch, 'por
 	['Debug', 'Release'].each { configurationGroup ->
 		['Linux x64'].each { osName ->
             def parameters = ['Config':configurationGroup, 'OuterLoop':false]
-            linuxPipeline.triggerPipelineOnEveryGithubPR("${osName} ${configurationGroup}", parameters)
+            linuxPipeline.triggerPipelineOnGithubPRComment("${osName} ${configurationGroup}", "(?i).*test\\W+portable\\W+linux\\W+${configurationGroup}.*", parameters)
             linuxPipeline.triggerPipelineOnGithubPush(parameters)
 		}
 	}
