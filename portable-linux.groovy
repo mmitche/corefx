@@ -50,14 +50,12 @@ simpleDockerNode('microsoft/dotnet-buildtools-prereqs:rhel7_prereqs_2') {
             def helixSource = getHelixSource()
             // Ask the CI SDK for a Build that makes sense.  We currently use the hash for the build
             def helixBuild = getCommit()
-            // Get the log folder where any helix logs should be stored (submission correlation id's, etc.)
-            def helixLogFolder = getLogFolder()
             // Get the user that should be associated with the submission
             def helixCreator = getUser()
             // Target queues
-            def targetHelixQueues = 'Debian.8.Amd64.Open+Ubuntu.1404.Amd64.Open'
+            def targetHelixQueues = 'Centos.73.Amd64.Open+RedHat.73.Amd64.Open+Debian.87.Amd64.Open+Ubuntu.1404.Amd64.Open+Ubuntu.1604.Amd64.Open+Ubuntu.1610.Amd64.Open+Ubuntu.1704.Amd64.Open+suse.422.amd64.Open+fedora.25.amd64.Open'
 
-            sh "./Tools/msbuild.sh src/upload-tests.proj /p:ArchGroup=x64 /p:ConfigurationGroup=${Config} /p:TestProduct=corefx /p:TimeoutInSeconds=1200 /p:TargetOS=Linux /p:HelixJobType=test/functional/portable/cli/ /p:HelixSource=${helixSource} /p:Build=${helixBuild} /p:HelixCreator=${helixCreator} /p:CloudDropAccountName=dotnetbuilddrops /p:CloudResultsAccountName=dotnetjobresults /p:CloudDropAccessToken=\$CloudDropAccessToken /p:CloudResultsAccessToken=\$OutputCloudResultsAccessToken /p:HelixApiEndpoint=https://helix.int-dot.net/api/2017-04-14/jobs /p:TargetQueues=${targetHelixQueues} /p:HelixLogFolder=${logFolder} /p:HelixCorrelationInfoFileName=SubmittedHelixRuns.txt"
+            sh "./Tools/msbuild.sh src/upload-tests.proj /p:ArchGroup=x64 /p:ConfigurationGroup=${Config} /p:TestProduct=corefx /p:TimeoutInSeconds=1200 /p:TargetOS=Linux /p:HelixJobType=test/functional/portable/cli/ /p:HelixSource=${helixSource} /p:Build=${helixBuild} /p:HelixCreator=${helixCreator} /p:CloudDropAccountName=dotnetbuilddrops /p:CloudResultsAccountName=dotnetjobresults /p:CloudDropAccessToken=\$CloudDropAccessToken /p:CloudResultsAccessToken=\$OutputCloudResultsAccessToken /p:HelixApiEndpoint=https://helix.dot.net/api/2017-04-14/jobs /p:TargetQueues=${targetHelixQueues} /p:HelixLogFolder=${logFolder} /p:HelixCorrelationInfoFileName=SubmittedHelixRuns.txt"
         }
     }
 
