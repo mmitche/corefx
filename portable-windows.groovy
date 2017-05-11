@@ -49,7 +49,7 @@ simpleNode('Windows_NT','latest') {
 
             bat "\"%VS140COMNTOOLS%\\VsDevCmd.bat\" && msbuild src\\upload-tests.proj /p:ArchGroup=x64 /p:ConfigurationGroup=${Config} /p:TestProduct=corefx /p:TimeoutInSeconds=1200 /p:TargetOS=Windows_NT /p:HelixJobType=test/functional/portable/cli/ /p:HelixSource=${helixSource} /p:Build=${helixBuild} /p:HelixCreator=${helixCreator} /p:CloudDropAccountName=dotnetbuilddrops /p:CloudResultsAccountName=dotnetjobresults /p:CloudDropAccessToken=%CloudDropAccessToken% /p:CloudResultsAccessToken=%OutputCloudResultsAccessToken% /p:HelixApiEndpoint=https://helix.dot.net/api/2017-04-14/jobs /p:TargetQueues=\"${targetHelixQueues}\" /p:HelixLogFolder=${logFolder}\\ /p:HelixCorrelationInfoFileName=SubmittedHelixRuns.txt"
 
-            submittedHelixJson = readJSON file: "${logFolder}/SubmittedHelixRuns.txt"
+            submittedHelixJson = readJSON file: "${logFolder}\\SubmittedHelixRuns.txt"
         }
     }
 }
