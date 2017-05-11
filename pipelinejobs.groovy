@@ -18,8 +18,7 @@ def linuxPipeline = Pipeline.createPipelineForGithub(this, project, branch, 'por
 	['Debug', 'Release'].each { configurationGroup ->
 		['Linux x64'].each { osName ->
             def parameters = ['Config':configurationGroup, 'OuterLoop':false]
-            linuxPipeline.triggerPipelineOnGithubPRComment("${osName} ${configurationGroup} Build", "(?i).*test\\W+portable\\W+linux\\W+${configurationGroup}.*", parameters)
-            linuxPipeline.triggerPipelineOnGithubPush(parameters)
+            linuxPipeline.triggerPipelineOnGithubPRComment("${osName} ${configurationGroup} Build", "(?i).*test\\W+portable\\W+linux\\W+${configurationGroup}\\W+pipeline.*", parameters)
 		}
 	}
 }
@@ -30,8 +29,7 @@ def windowsPipeline = Pipeline.createPipelineForGithub(this, project, branch, 'p
 	['Debug', 'Release'].each { configurationGroup ->
 		['Windows x64'].each { osName ->
             def parameters = ['Config':configurationGroup, 'OuterLoop':false]
-            windowsPipeline.triggerPipelineOnGithubPRComment("${osName} ${configurationGroup} Build", "(?i).*test\\W+portable\\W+windows\\W+${configurationGroup}.*", parameters)
-            windowsPipeline.triggerPipelineOnGithubPush(parameters)
+            windowsPipeline.triggerPipelineOnGithubPRComment("${osName} ${configurationGroup} Build", "(?i).*test\\W+portable\\W+windows\\W+${configurationGroup}\\W+pipeline.*", parameters)
 		}
 	}
 }
